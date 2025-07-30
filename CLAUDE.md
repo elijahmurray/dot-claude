@@ -4,7 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is a Claude boilerplate repository that provides a structured workflow for software development with Claude Code. It includes generic custom commands, notification scripts, and settings for managing development tasks using git worktrees, GitHub issues, and pull requests across any project.
+This is a template .claude directory that gets copied into new projects. It provides a structured workflow for software development with Claude Code, including generic custom commands, notification scripts, and settings for managing development tasks.
+
+## Project Structure
+
+Every project using this template has:
+- `docs/` - Local documentation and architecture notes
+- `specs/` - Saved prompts and feature specifications
+- `FEATURES_CHANGELOG.md` - User-facing features and changes
+- `DEV_EXPERIENCE_CHANGELOG.md` - Developer experience improvements
+
+[Update this section with project-specific information when using the template]
 
 ## Essential Commands
 
