@@ -4,15 +4,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is a template .claude directory that gets copied into new projects. It provides a structured workflow for software development with Claude Code, including generic custom commands, notification scripts, and settings for managing development tasks.
+This is a template .claude directory that gets included in projects as a git submodule. It provides a structured workflow for software development with Claude Code, including generic custom commands, notification scripts, and settings for managing development tasks.
+
+## Integration Method
+
+This .claude directory is typically included as a git submodule, allowing projects to:
+- Receive updates from the main dot-claude repository
+- Maintain project-specific customizations
+- Share improvements back to the community
+
+### Checking Submodule Status
+```bash
+# Check if .claude is a submodule
+git submodule status
+
+# Update to latest version
+/cmd-claude-update
+```
 
 ## Project Structure
 
 Every project using this template has:
 - `docs/` - Local documentation and architecture notes
-- `specs/` - Saved prompts and feature specifications
+- `specs/` - Saved prompts and feature specifications  
 - `FEATURES_CHANGELOG.md` - User-facing features and changes
 - `DEV_EXPERIENCE_CHANGELOG.md` - Developer experience improvements
+- `.claude/` - This directory (as a submodule)
+  - `commands/` - Reusable command templates
+  - `prompts/` - Generic AI assistance prompts
+  - `scripts/` - Utility scripts
+  - `settings.local.json` - Project-specific settings (not tracked in submodule)
 
 [Update this section with project-specific information when using the template]
 
@@ -170,3 +191,40 @@ docker-compose down
 - Follow existing code conventions and patterns
 - Use the notification system to alert when long-running tasks complete
 - Feature branches should be linked to issues (GitHub, GitLab, Jira, etc.)
+
+## Working with the .claude Submodule
+
+### Understanding the Setup
+- The .claude directory is a git submodule pointing to the dot-claude repository
+- Your `settings.local.json` is gitignored and remains project-specific
+- Updates to commands/prompts can be pulled from the main repository
+
+### Updating .claude
+```bash
+# Use the command
+/cmd-claude-update
+
+# Or manually
+cd .claude
+git pull origin main
+cd ..
+git add .claude
+git commit -m "Update .claude to latest version"
+```
+
+### Making Local Customizations
+If you need project-specific commands that shouldn't be shared:
+1. Create them in your main project (outside .claude)
+2. Or create a local branch in the submodule
+3. Document them in your project's main CLAUDE.md
+
+### Contributing Back
+When you create useful improvements:
+```bash
+cd .claude
+git checkout -b feature/your-improvement
+# Make changes
+git commit -m "Add: your improvement"
+git push origin feature/your-improvement
+# Create PR on GitHub
+```

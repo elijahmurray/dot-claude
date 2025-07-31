@@ -13,9 +13,17 @@ This changelog tracks improvements to the reusable Claude commands that can be p
   - `/optimize` - Performance optimization
 - Git workflow commands from original boilerplate
 - Notification system for long-running tasks
+- **Git Submodule Support**: Complete workflow for using dot-claude as a git submodule
+  - `scripts/setup-as-submodule.sh` - Helper script to add dot-claude as a submodule
+  - `/cmd-claude-update` - Command to update the .claude submodule to latest version
+  - Comprehensive documentation for submodule workflows
+  - Troubleshooting guide for common submodule issues
 
 ### Changed
-- None yet
+- **Documentation**: Updated README.md and CLAUDE.md to explain submodule approach
+  - Added installation methods (submodule vs direct clone)
+  - Included version management guidelines
+  - Enhanced contribution instructions for submodule users
 
 ### Fixed
 - **Worktree Creation**: Now properly copies `.claude` directory including `settings.local.json` into new worktrees
