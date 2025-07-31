@@ -67,6 +67,22 @@ if [ -f "../../credentials.json" ]; then
     echo "✅ Copied Google Calendar credentials"
 fi
 
+# Copy .claude directory with all settings and commands
+if [ -d "../../.claude" ]; then
+    echo "📂 Copying .claude directory..."
+    cp -r ../../.claude ./.claude
+    echo "✅ Copied .claude directory with all settings and commands"
+    
+    # Check if settings.local.json exists
+    if [ -f "../../.claude/settings.local.json" ]; then
+        echo "✅ Found and copied settings.local.json"
+    else
+        echo "⚠️  No settings.local.json found - you may need to create one from settings.local.json.example"
+    fi
+else
+    echo "❌ No .claude directory found in main directory"
+fi
+
 # Copy CLAUDE.md files for proper context
 if [ -f "../../CLAUDE.md" ]; then
     cp ../../CLAUDE.md ./CLAUDE.md
