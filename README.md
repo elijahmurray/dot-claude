@@ -29,13 +29,25 @@ This repository contains the `.claude` directory that provides a structured work
 
 ## Installation
 
+### Quick Setup (One-Liners)
+
+**For a new project (no existing .claude):**
+```bash
+cd your-project && bash <(curl -sSL https://raw.githubusercontent.com/elijahmurray/dot-claude/main/scripts/setup-as-submodule.sh)
+```
+
+**For a project with existing .claude directory:**
+```bash
+mv .claude .claude.backup && git submodule add https://github.com/elijahmurray/dot-claude.git .claude && cp .claude.backup/settings.local.json .claude/settings.local.json 2>/dev/null && rm -rf .claude.backup && git add .gitmodules .claude && git commit -m "Convert .claude to submodule"
+```
+
 ### Method 1: As a Git Submodule (Recommended)
 
 Add dot-claude to your existing project as a submodule:
 
 ```bash
 # In your project root
-git submodule add https://github.com/yourusername/dot-claude.git .claude
+git submodule add https://github.com/elijahmurray/dot-claude.git .claude
 git commit -m "Add .claude as submodule"
 
 # Create your settings file
@@ -49,7 +61,7 @@ For projects that don't need update capabilities:
 
 ```bash
 # Clone directly into your project
-git clone https://github.com/yourusername/dot-claude.git .claude
+git clone https://github.com/elijahmurray/dot-claude.git .claude
 rm -rf .claude/.git  # Remove git tracking
 
 # Create your settings file
@@ -139,6 +151,37 @@ Fork the repository and submit pull requests with your improvements.
 - `/cmd-issue-complete` - Complete an issue after merge
 - `/cmd-claude-update` - Update .claude submodule to latest version
 - And more...
+
+## Migration Guide
+
+### Converting Existing .claude to Submodule
+
+If your project already has a `.claude` directory from the old clone method:
+
+1. **Backup and convert (one-liner):**
+   ```bash
+   mv .claude .claude.backup && git submodule add https://github.com/elijahmurray/dot-claude.git .claude && cp .claude.backup/settings.local.json .claude/settings.local.json 2>/dev/null && rm -rf .claude.backup && git add .gitmodules .claude && git commit -m "Convert .claude to submodule"
+   ```
+
+2. **Or step-by-step:**
+   ```bash
+   # Backup existing settings
+   cp .claude/settings.local.json settings.backup.json
+   
+   # Remove old .claude
+   rm -rf .claude
+   
+   # Add as submodule
+   git submodule add https://github.com/elijahmurray/dot-claude.git .claude
+   
+   # Restore settings
+   cp settings.backup.json .claude/settings.local.json
+   rm settings.backup.json
+   
+   # Commit
+   git add .gitmodules .claude
+   git commit -m "Convert .claude to submodule"
+   ```
 
 ## Troubleshooting
 
