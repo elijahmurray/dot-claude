@@ -24,6 +24,11 @@ This changelog tracks improvements to the reusable Claude commands that can be p
   - Added installation methods (submodule vs direct clone)
   - Included version management guidelines
   - Enhanced contribution instructions for submodule users
+- **cmd-issue-start**: Streamlined for pragmatic, fast development
+  - Removed heavy TDD requirements - now focuses on practical testing
+  - Emphasizes shipping clean, minimal code quickly
+  - Tests for critical paths and features, not everything
+  - More real-world approach to development workflow
 
 ### Fixed
 - **Worktree Creation**: Now properly copies `.claude` directory including `settings.local.json` into new worktrees
