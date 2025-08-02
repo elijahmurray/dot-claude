@@ -177,6 +177,7 @@ The `settings.local.json.example` provides:
 - Each feature is developed in its own worktree
 - Worktrees are automatically cleaned up after merge
 - Prevents conflicts between concurrent development tasks
+- **Important**: When working in a worktree, all commands operate within that worktree's directory structure, not the parent repository
 
 ## Common Tasks
 

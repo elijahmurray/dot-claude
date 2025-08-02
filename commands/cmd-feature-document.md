@@ -7,11 +7,13 @@ Document the feature by creating a specification and updating all relevant docum
 
 ## Instructions
 
+**IMPORTANT**: This command operates in the current working directory. When working in a worktree, it will create documentation within that worktree, not in the parent repository.
+
 This command ensures all documentation is complete BEFORE creating a PR. It handles:
-1. Creating a feature specification
-2. Updating FEATURES.md
-3. Updating README.md (if needed)
-4. Updating CLAUDE.md (if needed)
+1. Creating a feature specification in `./specs/`
+2. Updating `./FEATURES.md` or `./CHANGELOG.md`
+3. Updating `./README.md` (if needed)
+4. Updating `./CLAUDE.md` (if needed)
 
 ### 1. Determine Feature Name
 ```bash
@@ -26,6 +28,9 @@ echo "📝 Documenting feature: $FEATURE_NAME"
 Create a comprehensive specification document from the development session:
 
 ```bash
+# Create specs directory if it doesn't exist
+mkdir -p specs
+
 # Generate the spec filename with current date
 SPEC_DATE=$(date +%Y-%m-%d)
 SPEC_FILE="specs/${SPEC_DATE}-${FEATURE_NAME}.md"
