@@ -200,6 +200,21 @@ claude code --add-dir ..
 
 This ensures all `.claude` scripts and commands work properly regardless of your current directory.
 
+### Fixing Existing Broken Worktrees
+
+If you created a worktree before the submodule fix and get errors like:
+```
+fatal: not a git repository: .claude/../.git/modules/.claude
+```
+
+Fix it by removing the `.git` file from the copied `.claude`:
+```bash
+cd your-worktree
+rm .claude/.git
+```
+
+This removes the submodule reference and allows git to work normally.
+
 ### Submodule Issues
 
 **"fatal: No url found for submodule path '.claude'"**
