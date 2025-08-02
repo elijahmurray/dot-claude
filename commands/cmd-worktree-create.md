@@ -70,11 +70,21 @@ fi
 # Copy .claude directory with all settings and commands
 if [ -d "../../.claude" ]; then
     echo "📂 Copying .claude directory..."
-    cp -r ../../.claude ./.claude
+    
+    # Check if .claude is a submodule (has a .git file, not directory)
+    if [ -f "../../.claude/.git" ]; then
+        echo "📦 Detected .claude as submodule, copying content only..."
+        # Use rsync to copy everything except .git
+        rsync -av --exclude='.git' ../../.claude/ ./.claude/
+    else
+        # Regular directory copy
+        cp -r ../../.claude ./.claude
+    fi
+    
     echo "✅ Copied .claude directory with all settings and commands"
     
     # Check if settings.local.json exists
-    if [ -f "../../.claude/settings.local.json" ]; then
+    if [ -f "./.claude/settings.local.json" ]; then
         echo "✅ Found and copied settings.local.json"
     else
         echo "⚠️  No settings.local.json found - you may need to create one from settings.local.json.example"

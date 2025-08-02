@@ -185,6 +185,21 @@ If your project already has a `.claude` directory from the old clone method:
 
 ## Troubleshooting
 
+### Working in Subdirectories
+
+If notification scripts don't work when you're in subdirectories (e.g., `frontend/`, `backend/`), use the `--add-dir` flag:
+
+```bash
+# From project root
+claude code --add-dir .
+
+# From a subdirectory
+cd frontend
+claude code --add-dir ..
+```
+
+This ensures all `.claude` scripts and commands work properly regardless of your current directory.
+
 ### Submodule Issues
 
 **"fatal: No url found for submodule path '.claude'"**

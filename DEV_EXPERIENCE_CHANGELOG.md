@@ -34,6 +34,7 @@ This changelog tracks improvements to the reusable Claude commands that can be p
 - **Worktree Creation**: Now properly copies `.claude` directory including `settings.local.json` into new worktrees
   - Ensures Claude Code has access to all custom commands and settings in worktree environments
   - Added check and warning for missing `settings.local.json` file
+  - Fixed submodule handling: excludes `.git` file when copying to prevent git errors in worktrees
 
 ### Removed
 - None yet

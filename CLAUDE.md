@@ -192,6 +192,24 @@ docker-compose down
 - Use the notification system to alert when long-running tasks complete
 - Feature branches should be linked to issues (GitHub, GitLab, Jira, etc.)
 
+### Working in Subdirectories
+
+When working in subdirectories (like `frontend/` or `backend/`), the notification scripts may not work properly due to relative paths. To fix this, use the `--add-dir` flag when starting Claude Code:
+
+```bash
+# Start from project root to ensure scripts work
+claude code --add-dir .
+
+# Or if you need to work in a specific directory
+cd frontend
+claude code --add-dir ..
+```
+
+This ensures that:
+- Notification scripts can be found at `.claude/scripts/`
+- All custom commands work properly
+- Settings paths resolve correctly
+
 ## Working with the .claude Submodule
 
 ### Understanding the Setup
