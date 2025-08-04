@@ -23,6 +23,12 @@ This changelog tracks improvements to the reusable Claude commands that can be p
   - Provided ready-to-use Linear MCP configuration using `npx -y mcp-remote https://mcp.linear.app/sse`
   - Clarified MCP installation UI: spacebar toggles selection, Enter proceeds
   - Added pre-configured server commands section with Linear and Git examples
+- **Automated Command Scripts**: Eliminated manual prompts from key commands
+  - Created `scripts/pr-create.sh` for fully automated PR creation without Y/N prompts
+  - Created `scripts/setup-ticket-system.sh` for interactive ticket system configuration
+  - Created `scripts/claude-update.sh` for automated submodule updates with `--force` flag
+  - Updated commands to call scripts instead of requiring manual interaction
+  - Preserved all validation checks and error handling while removing workflow interruptions
 
 ### Changed
 - **Documentation**: Updated README.md and CLAUDE.md to explain submodule approach

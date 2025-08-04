@@ -44,7 +44,9 @@ Follow these steps to complete the task:
 
 Remember: Ship working code fast, but don't compromise on quality. Write tests for what matters, keep the code clean, and move on.
 
-Also, being a good developer you will commit your code when you reach good pauses, so that your work is saved as you go. You will also follow the project's git workflow and check out a branch for whatever feature you're working on before you start, and name it appropriately, and link it to the issue that details the work.
+Also, being a good developer you will commit your code when you reach good pauses, so that your work is saved as you go. You will also follow the project's git workflow and check out a branch for whatever feature you're working on before you start, and name it appropriately, and link it to the ticket that details the work.
+
+Check the CLAUDE.md file for details about the ticket management system being used in this project (GitHub Issues, Linear, Jira, etc.) and follow the appropriate workflow for linking branches to tickets.
 
 ## Next Steps
 
@@ -66,7 +68,7 @@ After starting work on an issue, here's what you should do:
    - This creates a specification in the `specs/` directory
 
 4. **Ready to Merge**:
-   - If using GitHub: Create PR with `/cmd-pr-create`
+   - Create PR/MR with `/cmd-pr-create` (supports GitHub, GitLab, etc.)
    - If local only: `git checkout main && git merge feature-branch`
 
 5. **After Merge**:

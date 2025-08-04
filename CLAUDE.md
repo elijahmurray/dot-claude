@@ -37,6 +37,44 @@ Every project using this template has:
 
 [Update this section with project-specific information when using the template]
 
+## Ticket Management System
+
+**CONFIGURE THIS SECTION DURING PROJECT SETUP**
+
+This project uses: [SELECT ONE AND REMOVE OTHERS]
+
+### GitHub Issues
+- **CLI Tool**: `gh` (GitHub CLI)
+- **Installation**: `brew install gh` or visit https://cli.github.com/
+- **Authentication**: `gh auth login`
+- **Create Ticket**: `gh issue create --title "Title" --body "Description" --label enhancement`
+- **Link Branch**: Use `Closes #123` in PR descriptions
+- **Ticket URL Format**: `https://github.com/owner/repo/issues/123`
+
+### Linear
+- **CLI Tool**: `linear-cli` 
+- **Installation**: `npm install -g @linear/cli`
+- **Authentication**: `linear auth`
+- **Create Ticket**: `linear issue create --title "Title" --description "Description"`
+- **Link Branch**: Use `LIN-123` in branch names and commit messages
+- **Ticket URL Format**: `https://linear.app/team/issue/LIN-123`
+
+### Jira
+- **CLI Tool**: `jira` (go-jira)
+- **Installation**: `go install github.com/go-jira/jira/cmd/jira@latest`
+- **Authentication**: Configure with `jira login`
+- **Create Ticket**: `jira create --project PROJECT --type Story --summary "Title"`
+- **Link Branch**: Use `PROJECT-123` in branch names
+- **Ticket URL Format**: `https://company.atlassian.net/browse/PROJECT-123`
+
+### GitLab Issues
+- **CLI Tool**: `glab` (GitLab CLI)
+- **Installation**: `brew install glab` or visit https://gitlab.com/gitlab-org/cli
+- **Authentication**: `glab auth login`
+- **Create Ticket**: `glab issue create --title "Title" --description "Description"`
+- **Link Branch**: Use `Closes #123` in MR descriptions
+- **Ticket URL Format**: `https://gitlab.com/owner/repo/-/issues/123`
+
 ## Essential Commands
 
 ### Common Development Commands
