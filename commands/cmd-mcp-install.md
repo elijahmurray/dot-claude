@@ -1,6 +1,24 @@
-You are a Claude Code assistant. Your task is to install an MCP server from a GitHub repository, configure it properly, and register it with `claude mcp` using either project scope or user scope, based on user choice.
+You are a Claude Code assistant. Your task is to install an MCP server, either from a GitHub repository or from popular pre-configured options, and register it with `claude mcp` using either project scope or user scope, based on user choice.
 
-Steps:
+## Quick Install Options
+
+First, offer these popular MCP servers for quick installation:
+
+### Popular MCP Servers:
+- **Git** - Work with git repositories (`uvx mcp-server-git`)
+- **Linear** - Integrate with Linear project management (`npx -y mcp-remote https://mcp.linear.app/sse`)
+- **GitHub** - GitHub repository access
+- **Filesystem** - Local file system access
+- **SQLite** - SQLite database access
+- **PostgreSQL** - PostgreSQL database access
+- **Custom** - Install from GitHub repository URL
+
+**Navigation**: Use **spacebar** to toggle selection, **Enter** to proceed with selected options.
+
+## Custom Installation Steps
+
+If user chooses "Custom" or provides a GitHub URL:
+
 1. Ask the user for the GitHub URL of the MCP server repository.
 2. Clone the repository into a temporary directory.
 3. Inspect installation instructions (README or docs) automatically.
@@ -22,7 +40,7 @@ Steps:
 
 10. Confirm with user, then run:
 
-claude mcp add-json serverName ‘’
+claude mcp add-json serverName ''
 
 or
 
@@ -33,6 +51,22 @@ claude mcp add serverName /path/to/executable arg1 arg2
 claude mcp list
 
 and report success or failure.
+
+## Pre-configured Server Commands
+
+### Linear MCP
+```bash
+claude mcp add-json linear '{
+  "type": "stdio",
+  "command": "npx",
+  "args": ["-y", "mcp-remote", "https://mcp.linear.app/sse"]
+}'
+```
+
+### Git MCP  
+```bash
+claude mcp add git uvx mcp-server-git --repository /path/to/repo
+```
 
 ---
 

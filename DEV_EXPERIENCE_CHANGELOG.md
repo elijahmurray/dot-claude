@@ -18,6 +18,11 @@ This changelog tracks improvements to the reusable Claude commands that can be p
   - `/cmd-claude-update` - Command to update the .claude submodule to latest version
   - Comprehensive documentation for submodule workflows
   - Troubleshooting guide for common submodule issues
+- **Linear MCP Integration**: Enhanced MCP installation command with Linear support
+  - Added Linear as a pre-configured MCP option in `/cmd-mcp-install`
+  - Provided ready-to-use Linear MCP configuration using `npx -y mcp-remote https://mcp.linear.app/sse`
+  - Clarified MCP installation UI: spacebar toggles selection, Enter proceeds
+  - Added pre-configured server commands section with Linear and Git examples
 
 ### Changed
 - **Documentation**: Updated README.md and CLAUDE.md to explain submodule approach
