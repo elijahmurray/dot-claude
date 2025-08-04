@@ -18,3 +18,4 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+settings.local.json
