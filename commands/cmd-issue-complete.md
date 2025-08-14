@@ -56,7 +56,60 @@ if [ -n "$WORKTREE_PATH" ]; then
 fi
 ```
 
-### 3. Delete Feature Branch
+### 3. Clean Up Branch Database
+```bash
+echo "🗄️  Checking for branch-specific database..."
+
+if command -v psql &> /dev/null; then
+    # Try to detect main database name
+    MAIN_DB_NAME=""
+    
+    # Check common env files for database name
+    for env_file in ".env" "backend/.env" "frontend/.env.local"; do
+        if [ -f "$env_file" ]; then
+            # Look for DATABASE_URL or DB_NAME patterns
+            DB_FROM_URL=$(grep -E "^DATABASE_URL=" "$env_file" 2>/dev/null | head -1 | sed -E 's|.*://[^/]*/([^?]*)\??.*|\1|')
+            DB_FROM_NAME=$(grep -E "^DB_NAME=" "$env_file" 2>/dev/null | head -1 | cut -d'=' -f2)
+            
+            if [ -n "$DB_FROM_URL" ]; then
+                MAIN_DB_NAME="$DB_FROM_URL"
+                break
+            elif [ -n "$DB_FROM_NAME" ]; then
+                MAIN_DB_NAME="$DB_FROM_NAME"
+                break
+            fi
+        fi
+    done
+    
+    if [ -n "$MAIN_DB_NAME" ]; then
+        # Check for branch-specific database
+        BRANCH_DB_NAME="${MAIN_DB_NAME}_${FEATURE_BRANCH}"
+        
+        if PGPASSWORD=postgres psql -U postgres -h localhost -p 5432 -lqt 2>/dev/null | cut -d \| -f 1 | grep -qw "$BRANCH_DB_NAME"; then
+            echo "🗑️  Found branch database: $BRANCH_DB_NAME"
+            read -p "Drop database $BRANCH_DB_NAME? (y/N): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                if PGPASSWORD=postgres dropdb -U postgres -h localhost -p 5432 "$BRANCH_DB_NAME" 2>/dev/null; then
+                    echo "✅ Dropped database $BRANCH_DB_NAME"
+                else
+                    echo "❌ Failed to drop database $BRANCH_DB_NAME"
+                fi
+            else
+                echo "⏭️  Skipped database cleanup"
+            fi
+        else
+            echo "ℹ️  No branch-specific database found"
+        fi
+    else
+        echo "⚠️  Could not detect main database name - skipping database cleanup"
+    fi
+else
+    echo "⚠️  PostgreSQL client not found - skipping database cleanup"
+fi
+```
+
+### 4. Delete Feature Branch
 ```bash
 # Delete the local branch
 git branch -d "$FEATURE_BRANCH" 2>/dev/null || git branch -D "$FEATURE_BRANCH"
@@ -66,12 +119,13 @@ echo "✅ Deleted local branch: $FEATURE_BRANCH"
 git push origin --delete "$FEATURE_BRANCH" 2>/dev/null || echo "No remote branch to delete"
 ```
 
-### 4. Final Summary
+### 5. Final Summary
 ```bash
 echo ""
 echo "🎉 Issue cleanup completed!"
 echo ""
 echo "✅ Worktree removed (if existed)"
+echo "✅ Branch database cleaned (if existed)"
 echo "✅ Feature branch deleted"
 echo ""
 echo "📍 You are now on: $(git branch --show-current)"
@@ -106,6 +160,7 @@ After completing an issue, you have several options:
 This command cleans up after a merged issue:
 - Ensures the feature is properly merged
 - Removes the worktree (if it exists)
+- Cleans up branch-specific database
 - Deletes local and remote feature branches
 - Provides a clean slate for the next issue
 

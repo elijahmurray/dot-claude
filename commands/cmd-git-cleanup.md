@@ -8,6 +8,7 @@ This command helps maintain a clean git environment by removing:
 - Worktrees for branches that have been merged
 - Local branches that have been merged into main
 - Remote tracking branches that no longer exist
+- Branch-specific databases that are no longer needed
 
 ### 1. Find and Clean Merged Worktrees
 ```bash
@@ -53,7 +54,71 @@ else
 fi
 ```
 
-### 3. Prune Remote Tracking Branches
+### 3. Clean Branch Databases
+```bash
+echo "🗄️  Checking for branch databases to clean up..."
+
+if command -v psql &> /dev/null; then
+    # Try to detect main database name
+    MAIN_DB_NAME=""
+    
+    # Check common env files for database name
+    for env_file in ".env" "backend/.env" "frontend/.env.local"; do
+        if [ -f "$env_file" ]; then
+            # Look for DATABASE_URL or DB_NAME patterns
+            DB_FROM_URL=$(grep -E "^DATABASE_URL=" "$env_file" 2>/dev/null | head -1 | sed -E 's|.*://[^/]*/([^?]*)\??.*|\1|')
+            DB_FROM_NAME=$(grep -E "^DB_NAME=" "$env_file" 2>/dev/null | head -1 | cut -d'=' -f2)
+            
+            if [ -n "$DB_FROM_URL" ]; then
+                MAIN_DB_NAME="$DB_FROM_URL"
+                break
+            elif [ -n "$DB_FROM_NAME" ]; then
+                MAIN_DB_NAME="$DB_FROM_NAME"
+                break
+            fi
+        fi
+    done
+    
+    if [ -n "$MAIN_DB_NAME" ]; then
+        # Find all databases that match the pattern: main_db_branchname
+        BRANCH_DBS=$(PGPASSWORD=postgres psql -U postgres -h localhost -p 5432 -lqt 2>/dev/null | cut -d \| -f 1 | grep -E "^[[:space:]]*${MAIN_DB_NAME}_" | xargs)
+        
+        if [ -n "$BRANCH_DBS" ]; then
+            echo "Found branch databases:"
+            for DB in $BRANCH_DBS; do
+                # Extract branch name from database name
+                BRANCH_FROM_DB=$(echo "$DB" | sed "s/^${MAIN_DB_NAME}_//")
+                
+                # Check if the branch still exists
+                if ! git branch -a | grep -q "$BRANCH_FROM_DB"; then
+                    echo "🗑️  Database $DB (branch: $BRANCH_FROM_DB) - branch no longer exists"
+                    read -p "   Drop database $DB? (y/N): " -n 1 -r
+                    echo
+                    if [[ $REPLY =~ ^[Yy]$ ]]; then
+                        if PGPASSWORD=postgres dropdb -U postgres -h localhost -p 5432 "$DB" 2>/dev/null; then
+                            echo "   ✅ Dropped database $DB"
+                        else
+                            echo "   ❌ Failed to drop database $DB"
+                        fi
+                    else
+                        echo "   ⏭️  Skipped database $DB"
+                    fi
+                else
+                    echo "ℹ️  Database $DB (branch: $BRANCH_FROM_DB) - branch still exists, keeping"
+                fi
+            done
+        else
+            echo "✅ No branch databases found to clean up"
+        fi
+    else
+        echo "⚠️  Could not detect main database name - skipping database cleanup"
+    fi
+else
+    echo "⚠️  PostgreSQL client not found - skipping database cleanup"
+fi
+```
+
+### 4. Prune Remote Tracking Branches
 ```bash
 echo "🔍 Pruning remote tracking branches..."
 
@@ -61,13 +126,14 @@ echo "🔍 Pruning remote tracking branches..."
 git remote prune origin
 ```
 
-### 4. Summary Report
+### 5. Summary Report
 ```bash
 echo ""
 echo "🎉 Git cleanup completed!"
 echo ""
 echo "✅ Removed merged worktrees"
 echo "✅ Deleted merged local branches"
+echo "✅ Cleaned branch databases"
 echo "✅ Pruned remote tracking branches"
 echo ""
 echo "📊 Current status:"
@@ -82,6 +148,7 @@ git branch -a
 This command helps maintain a clean development environment by:
 - Removing worktrees for completed features
 - Deleting branches that have been merged
+- Cleaning up branch-specific databases
 - Keeping the repository organized and efficient
 
 ## Usage Examples

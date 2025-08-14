@@ -179,6 +179,13 @@ The `settings.local.json.example` provides:
 - Prevents conflicts between concurrent development tasks
 - **Important**: When working in a worktree, all commands operate within that worktree's directory structure, not the parent repository
 
+### Database Isolation (PostgreSQL)
+- Each worktree gets its own database clone for safe schema changes
+- Database naming: `{main_db_name}_{branch_name}` (e.g., `myapp_db_feature_auth`)
+- Environment files are automatically updated to point to the branch database
+- Run migrations independently without affecting main database
+- Databases are cleaned up when branches are merged and deleted
+
 ## Common Tasks
 
 ### Running Tests

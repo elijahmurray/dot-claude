@@ -127,20 +127,110 @@ elif [ -f "package.json" ]; then
     echo "✅ Node dependencies installed"
 fi
 
-# Database setup check
-echo "🗄️  Checking database setup..."
+# Database setup - Clone main database for this worktree
+echo "🗄️  Setting up worktree database..."
 if command -v psql &> /dev/null; then
     if ! pg_isready -h localhost -p 5432 &> /dev/null; then
         echo "⚠️  PostgreSQL not running - you may need to start it"
         echo "   Run: brew services start postgresql@14"
-    elif ! PGPASSWORD=postgres psql -U postgres -h localhost -p 5432 -lqt | cut -d \| -f 1 | grep -qw evie_crewai_db; then
-        echo "⚠️  Database 'evie_crewai_db' not found"
-        echo "   Run: ../../scripts/setup_database.sh"
     else
-        echo "✅ Database connection looks good"
+        # Try to detect main database name from environment files
+        MAIN_DB_NAME=""
+        
+        # Check common env files for database name
+        for env_file in "../../.env" "../../backend/.env" "../../frontend/.env.local"; do
+            if [ -f "$env_file" ]; then
+                # Look for DATABASE_URL or DB_NAME patterns
+                DB_FROM_URL=$(grep -E "^DATABASE_URL=" "$env_file" 2>/dev/null | head -1 | sed -E 's|.*://[^/]*/([^?]*)\??.*|\1|')
+                DB_FROM_NAME=$(grep -E "^DB_NAME=" "$env_file" 2>/dev/null | head -1 | cut -d'=' -f2)
+                
+                if [ -n "$DB_FROM_URL" ]; then
+                    MAIN_DB_NAME="$DB_FROM_URL"
+                    break
+                elif [ -n "$DB_FROM_NAME" ]; then
+                    MAIN_DB_NAME="$DB_FROM_NAME"
+                    break
+                fi
+            fi
+        done
+        
+        # If no database found in env files, try to detect from existing databases
+        if [ -z "$MAIN_DB_NAME" ]; then
+            echo "🔍 No database found in env files, checking for existing databases..."
+            # Look for common database patterns (exclude postgres system databases)
+            EXISTING_DBS=$(PGPASSWORD=postgres psql -U postgres -h localhost -p 5432 -lqt 2>/dev/null | cut -d \| -f 1 | grep -E "^[[:space:]]*[a-zA-Z]" | grep -v -E "^[[:space:]]*(postgres|template[01]|)" | head -1 | xargs)
+            if [ -n "$EXISTING_DBS" ]; then
+                MAIN_DB_NAME="$EXISTING_DBS"
+                echo "📍 Found existing database: $MAIN_DB_NAME"
+            fi
+        fi
+        
+        if [ -n "$MAIN_DB_NAME" ]; then
+            # Create branch-specific database name
+            BRANCH_DB_NAME="${MAIN_DB_NAME}_${BRANCH_NAME}"
+            echo "📋 Main database: $MAIN_DB_NAME"
+            echo "🌿 Branch database: $BRANCH_DB_NAME"
+            
+            # Check if main database exists
+            if PGPASSWORD=postgres psql -U postgres -h localhost -p 5432 -lqt 2>/dev/null | cut -d \| -f 1 | grep -qw "$MAIN_DB_NAME"; then
+                echo "🔄 Cloning database $MAIN_DB_NAME to $BRANCH_DB_NAME..."
+                
+                # Create the new database
+                if PGPASSWORD=postgres createdb -U postgres -h localhost -p 5432 -T "$MAIN_DB_NAME" "$BRANCH_DB_NAME" 2>/dev/null; then
+                    echo "✅ Database cloned successfully"
+                    
+                    # Update environment files to point to the new database
+                    echo "🔧 Updating environment files..."
+                    for env_file in ".env" "backend/.env" "frontend/.env.local"; do
+                        if [ -f "$env_file" ]; then
+                            # Update DATABASE_URL
+                            if grep -q "DATABASE_URL=" "$env_file"; then
+                                sed -i.bak "s|/$MAIN_DB_NAME|/$BRANCH_DB_NAME|g" "$env_file"
+                                echo "   ✅ Updated DATABASE_URL in $env_file"
+                            fi
+                            
+                            # Update DB_NAME
+                            if grep -q "DB_NAME=" "$env_file"; then
+                                sed -i.bak "s/DB_NAME=$MAIN_DB_NAME/DB_NAME=$BRANCH_DB_NAME/g" "$env_file"
+                                echo "   ✅ Updated DB_NAME in $env_file"
+                            fi
+                            
+                            # Clean up backup files
+                            rm -f "$env_file.bak"
+                        fi
+                    done
+                    
+                    # Try to run migrations if migration command exists
+                    echo "🔄 Checking for migration commands..."
+                    if [ -f "alembic.ini" ] || [ -f "../alembic.ini" ] || [ -f "../../alembic.ini" ]; then
+                        echo "📦 Found Alembic configuration"
+                        echo "   Run 'alembic upgrade head' to apply migrations to your branch database"
+                    elif [ -f "package.json" ] && grep -q "migrate" package.json; then
+                        echo "📦 Found npm migration script"
+                        echo "   Run 'npm run migrate' to apply migrations to your branch database"
+                    elif [ -f "../package.json" ] && grep -q "migrate" ../package.json; then
+                        echo "📦 Found npm migration script in parent"
+                        echo "   Run 'cd .. && npm run migrate' to apply migrations to your branch database"
+                    else
+                        echo "ℹ️  No migration scripts detected - you may need to run migrations manually"
+                    fi
+                    
+                else
+                    echo "❌ Failed to clone database - you may need to create it manually"
+                    echo "   Manual command: createdb -U postgres -T $MAIN_DB_NAME $BRANCH_DB_NAME"
+                fi
+            else
+                echo "⚠️  Main database '$MAIN_DB_NAME' not found"
+                echo "   You may need to set up the main database first"
+            fi
+        else
+            echo "⚠️  Could not detect main database name"
+            echo "   Please set up your database configuration manually"
+        fi
     fi
 else
     echo "⚠️  PostgreSQL client not found"
+    echo "   Install with: brew install postgresql"
 fi
 
 # Run prerequisite check

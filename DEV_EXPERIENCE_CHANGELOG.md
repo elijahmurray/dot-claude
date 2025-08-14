@@ -46,6 +46,13 @@ This changelog tracks improvements to the reusable Claude commands that can be p
   - Ensures Claude Code has access to all custom commands and settings in worktree environments
   - Added check and warning for missing `settings.local.json` file
   - Fixed submodule handling: excludes `.git` file when copying to prevent git errors in worktrees
+- **Database Isolation**: Added PostgreSQL database cloning for worktree isolation
+  - Auto-detects main database name from environment files
+  - Creates branch-specific database clones (e.g., `main_db_feature_branch`)
+  - Updates environment variables to point to cloned database
+  - Provides migration guidance for new databases
+  - Added database cleanup in both `/cmd-git-cleanup` and `/cmd-issue-complete`
+  - Includes confirmation prompts before dropping databases for safety
 
 ### Removed
 - None yet
