@@ -121,9 +121,11 @@
       "Bash(# Verify the branch has been merged\nFEATURE_BRANCH=\"\"feature/migrate-crewai-to-langchain\"\"\n\nif git branch --merged main | grep -q \"\"$FEATURE_BRANCH\"\"; then\n    echo \"\"✅ Branch $FEATURE_BRANCH has been merged into main\"\"\nelse\n    echo \"\"❌ Branch $FEATURE_BRANCH has not been merged into main yet\"\"\n    exit 1\nfi)",
       "Bash(# List all worktrees\necho \"\"📍 Current worktrees:\"\"\ngit worktree list\n\n# Find the worktree path for our feature branch\nWORKTREE_PATH=$(git worktree list | grep \"\"feature/migrate-crewai-to-langchain\"\" | awk ''{print $1}'')\necho -e \"\"\\n🔍 Worktree path for feature branch: $WORKTREE_PATH\"\")",
       "Bash(# Delete the local branch\nFEATURE_BRANCH=\"\"feature/migrate-crewai-to-langchain\"\"\n\ngit branch -d \"\"$FEATURE_BRANCH\"\" 2>/dev/null || git branch -D \"\"$FEATURE_BRANCH\"\"\necho \"\"✅ Deleted local branch: $FEATURE_BRANCH\"\"\n\n# Delete remote branch if it exists\necho -e \"\"\\n🔍 Attempting to delete remote branch...\"\"\ngit push origin --delete \"\"$FEATURE_BRANCH\"\" 2>/dev/null && echo \"\"✅ Deleted remote branch\"\" || echo \"\"ℹ️  Remote branch may have been deleted by GitHub after merge\"\")",
-      "Bash(pg_isready:*)"
-    ],
-    "deny": []
+      "Bash(pg_isready:*)",
+      "Bash(.claude/scripts/worktree-create.sh:*)",
+      "Bash(./scripts/worktree-create.sh:*)",
+      "Bash(scripts/worktree-create.sh:*)"
+    ]
   },
   "hooks": {
     "Notification": [

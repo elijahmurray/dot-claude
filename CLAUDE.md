@@ -139,9 +139,10 @@ The repository includes a notification script (`scripts/notify-agent-complete.sh
 
 ### Settings Configuration
 The `settings.local.json.example` provides:
-- Bash command permissions whitelist
+- Bash command permissions whitelist (including seamless script execution)
 - Hook configurations for notifications
 - Integration with MCP (Model Context Protocol) servers
+- Pre-approved permissions for worktree creation and other development scripts
 
 ## Development Workflow
 
@@ -175,6 +176,7 @@ The `settings.local.json.example` provides:
 
 ### Git Worktree Usage
 - Each feature is developed in its own worktree
+- Worktree creation is seamless via `/cmd-worktree-create` (no bash approvals needed)
 - Worktrees are automatically cleaned up after merge
 - Prevents conflicts between concurrent development tasks
 - **Important**: When working in a worktree, all commands operate within that worktree's directory structure, not the parent repository

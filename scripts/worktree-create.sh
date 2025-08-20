@@ -5,6 +5,25 @@
 
 set -e
 
+# Function to find project root (directory containing .git)
+find_project_root() {
+    local current_dir="$(pwd)"
+    while [[ "$current_dir" != "/" ]]; do
+        if [[ -d "$current_dir/.git" ]] || [[ -f "$current_dir/.git" ]]; then
+            echo "$current_dir"
+            return
+        fi
+        current_dir="$(dirname "$current_dir")"
+    done
+    echo "❌ Error: Not in a git repository" >&2
+    exit 1
+}
+
+# Get project root and change to it
+PROJECT_ROOT=$(find_project_root)
+cd "$PROJECT_ROOT"
+echo "📍 Working from project root: $PROJECT_ROOT"
+
 # Get parameters
 BRANCH_TYPE=${1:-"feature"}
 BRANCH_NAME=${2:-""}
@@ -31,12 +50,12 @@ echo "🔧 Setting up worktree environment..."
 
 # Copy environment files
 echo "📄 Copying environment configuration..."
-if [ -f "../../.env.example" ]; then
-    if [ -f "../../.env" ]; then
-        cp ../../.env .env
+if [ -f "$PROJECT_ROOT/.env.example" ]; then
+    if [ -f "$PROJECT_ROOT/.env" ]; then
+        cp "$PROJECT_ROOT/.env" .env
         echo "✅ Copied backend .env"
     else
-        cp ../../.env.example .env
+        cp "$PROJECT_ROOT/.env.example" .env
         echo "⚠️  Copied .env.example - you'll need to configure API keys"
     fi
 else
@@ -44,13 +63,13 @@ else
 fi
 
 # Copy frontend environment files
-if [ -f "../../frontend/.env.example" ]; then
+if [ -f "$PROJECT_ROOT/frontend/.env.example" ]; then
     mkdir -p frontend
-    if [ -f "../../frontend/.env.local" ]; then
-        cp ../../frontend/.env.local frontend/.env.local
+    if [ -f "$PROJECT_ROOT/frontend/.env.local" ]; then
+        cp "$PROJECT_ROOT/frontend/.env.local" frontend/.env.local
         echo "✅ Copied frontend .env.local"
     else
-        cp ../../frontend/.env.example frontend/.env.local
+        cp "$PROJECT_ROOT/frontend/.env.example" frontend/.env.local
         echo "⚠️  Copied frontend/.env.example - you'll need to configure OAuth keys"
     fi
 else
@@ -58,32 +77,32 @@ else
 fi
 
 # Copy frontend lib directory for auth and utilities
-if [ -d "../../frontend/lib" ]; then
+if [ -d "$PROJECT_ROOT/frontend/lib" ]; then
     mkdir -p frontend
-    cp -r ../../frontend/lib frontend/
+    cp -r "$PROJECT_ROOT/frontend/lib" frontend/
     echo "✅ Copied frontend/lib directory"
 else
     echo "❌ No frontend/lib directory found"
 fi
 
 # Copy Google credentials if needed
-if [ -f "../../credentials.json" ]; then
-    cp ../../credentials.json ./credentials.json
+if [ -f "$PROJECT_ROOT/credentials.json" ]; then
+    cp "$PROJECT_ROOT/credentials.json" ./credentials.json
     echo "✅ Copied Google Calendar credentials"
 fi
 
 # Copy .claude directory with all settings and commands
-if [ -d "../../.claude" ]; then
+if [ -d "$PROJECT_ROOT/.claude" ]; then
     echo "📂 Copying .claude directory..."
     
     # Check if .claude is a submodule (has a .git file, not directory)
-    if [ -f "../../.claude/.git" ]; then
+    if [ -f "$PROJECT_ROOT/.claude/.git" ]; then
         echo "📦 Detected .claude as submodule, copying content only..."
         # Use rsync to copy everything except .git
-        rsync -av --exclude='.git' ../../.claude/ ./.claude/
+        rsync -av --exclude='.git' "$PROJECT_ROOT/.claude/" ./.claude/
     else
         # Regular directory copy
-        cp -r ../../.claude ./.claude
+        cp -r "$PROJECT_ROOT/.claude" ./.claude
     fi
     
     echo "✅ Copied .claude directory with all settings and commands"
@@ -99,14 +118,14 @@ else
 fi
 
 # Copy CLAUDE.md files for proper context
-if [ -f "../../CLAUDE.md" ]; then
-    cp ../../CLAUDE.md ./CLAUDE.md
+if [ -f "$PROJECT_ROOT/CLAUDE.md" ]; then
+    cp "$PROJECT_ROOT/CLAUDE.md" ./CLAUDE.md
     echo "✅ Copied main CLAUDE.md"
 fi
 
-if [ -f "../../frontend/CLAUDE.md" ]; then
+if [ -f "$PROJECT_ROOT/frontend/CLAUDE.md" ]; then
     mkdir -p frontend
-    cp ../../frontend/CLAUDE.md frontend/CLAUDE.md
+    cp "$PROJECT_ROOT/frontend/CLAUDE.md" frontend/CLAUDE.md
     echo "✅ Copied frontend CLAUDE.md"
 fi
 
@@ -143,7 +162,7 @@ if command -v psql &> /dev/null; then
         MAIN_DB_NAME=""
         
         # Check common env files for database name
-        for env_file in "../../.env" "../../backend/.env" "../../frontend/.env.local"; do
+        for env_file in "$PROJECT_ROOT/.env" "$PROJECT_ROOT/backend/.env" "$PROJECT_ROOT/frontend/.env.local"; do
             if [ -f "$env_file" ]; then
                 # Look for DATABASE_URL or DB_NAME patterns
                 DB_FROM_URL=$(grep -E "^DATABASE_URL=" "$env_file" 2>/dev/null | head -1 | sed -E 's|.*://[^/]*/([^?]*)\??.*|\1|')
@@ -240,8 +259,8 @@ fi
 
 # Run prerequisite check
 echo "🔍 Running final environment check..."
-if [ -f "../../scripts/check_prerequisites.sh" ]; then
-    ../../scripts/check_prerequisites.sh
+if [ -f "$PROJECT_ROOT/scripts/check_prerequisites.sh" ]; then
+    "$PROJECT_ROOT/scripts/check_prerequisites.sh"
 else
     echo "⚠️  Prerequisites check script not found"
 fi

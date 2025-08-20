@@ -8,10 +8,20 @@ Create a new Git worktree for parallel feature development.
 
 ## Instructions
 
-Run the automated worktree setup script:
+Run the automated worktree setup script. The script will automatically detect the correct path regardless of your current directory:
+
 ```bash
+# From project root
 .claude/scripts/worktree-create.sh ${BRANCH_TYPE:-"feature"} ${BRANCH_NAME}
+
+# From any subdirectory
+../scripts/worktree-create.sh ${BRANCH_TYPE:-"feature"} ${BRANCH_NAME}
+
+# Or let the script find itself
+scripts/worktree-create.sh ${BRANCH_TYPE:-"feature"} ${BRANCH_NAME}
 ```
+
+The script is pre-approved in settings.local.json and will run without bash command approvals.
 
 ## What the Script Does
 
