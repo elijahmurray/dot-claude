@@ -54,6 +54,8 @@ if [ -f ".claude/settings.local.json.example" ]; then
     cp .claude/settings.local.json.example .claude/settings.local.json
     echo "✅ Created .claude/settings.local.json from example"
     echo "   Please edit this file to customize your settings"
+    
+    echo "🛡️  settings.local.json is protected from deletion by Claude Code via permissions.deny"
 else
     echo "⚠️  No settings.local.json.example found"
 fi

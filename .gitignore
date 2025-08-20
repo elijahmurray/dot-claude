@@ -1,4 +1,5 @@
 # Local settings (project-specific, not shared)
+# PROTECTED: Claude Code prevents deletion via permissions.deny
 settings.local.json
 
 # OS files

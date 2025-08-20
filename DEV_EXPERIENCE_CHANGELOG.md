@@ -53,6 +53,11 @@ This changelog tracks improvements to the reusable Claude commands that can be p
   - Provides migration guidance for new databases
   - Added database cleanup in both `/cmd-git-cleanup` and `/cmd-issue-complete`
   - Includes confirmation prompts before dropping databases for safety
+- **File Protection**: Added Claude Code native protection for `settings.local.json`
+  - Uses `permissions.deny` to prevent accidental deletion via `rm` or `git rm` commands
+  - Still allows editing and customization of settings
+  - Works seamlessly with submodule setups
+  - Replaced git-based protection with Claude Code's native permission system
 
 ### Removed
 - None yet

@@ -1,5 +1,10 @@
 {
   "permissions": {
+    "deny": [
+      "Bash(rm *settings.local.json*)",
+      "Bash(rm .claude/settings.local.json)",
+      "Bash(git rm *settings.local.json*)"
+    ],
     "allow": [
       "Bash(find:*)",
       "Bash(gh pr create:*)",
