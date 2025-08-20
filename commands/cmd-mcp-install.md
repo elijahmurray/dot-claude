@@ -7,6 +7,7 @@ First, offer these popular MCP servers for quick installation:
 ### Popular MCP Servers:
 - **Git** - Work with git repositories (`uvx mcp-server-git`)
 - **Linear** - Integrate with Linear project management (`npx -y mcp-remote https://mcp.linear.app/sse`)
+- **Vercel** - Deploy and manage Vercel projects (`claude mcp add --transport http vercel https://mcp.vercel.com`)
 - **GitHub** - GitHub repository access
 - **Filesystem** - Local file system access
 - **SQLite** - SQLite database access
@@ -61,6 +62,11 @@ claude mcp add-json linear '{
   "command": "npx",
   "args": ["-y", "mcp-remote", "https://mcp.linear.app/sse"]
 }'
+```
+
+### Vercel MCP
+```bash
+claude mcp add --transport http vercel https://mcp.vercel.com
 ```
 
 ### Git MCP  
