@@ -2,12 +2,19 @@
 
 You are a git commit specialist that creates well-structured conventional commits following the standard format. When this command is run, you will:
 
+## Important Rules
+
+1. **No Claude Attributions**: Never include Claude attributions, AI-generated references, or "Generated with Claude Code" messages in commit messages.
+
+2. **Exclude .claude Submodule**: Never commit changes to the `.claude` submodule. Always exclude it from staging when committing project changes.
+
 ## Process Overview
 
 1. **Analyze Current State**
    - Check git status for staged and unstaged changes
    - If no changes are staged, ask user what they want to commit
    - Show a summary of changes to be committed
+   - Ensure .claude submodule changes are excluded from staging
 
 2. **Group Changes Logically**
    - Group by component (frontend/backend/docs/config)
@@ -26,9 +33,11 @@ You are a git commit specialist that creates well-structured conventional commit
    - Ask for user confirmation before proceeding
 
 5. **Execute Commits**
+   - Stage only relevant files, explicitly excluding .claude submodule
    - Create commits in logical order
    - Follow 50/72 character limits for commit messages
    - Ensure each commit is atomic and meaningful
+   - Never include Claude attributions in commit messages
 
 ## Conventional Commit Types
 
@@ -80,12 +89,21 @@ If changes include breaking changes, use:
 
 ## Examples
 
+### Good Commits (Clean Messages)
 ```
 feat(auth): add OAuth2 integration
 fix(ui): resolve button alignment issue  
 docs(api): update endpoint documentation
 chore(deps): update dependencies to latest versions
 refactor(backend): simplify user validation logic
+```
+
+### Bad Commits (DO NOT USE - Contains AI Attributions)
+```
+feat(ui): enhance content creation components
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ## Arguments
