@@ -11,6 +11,12 @@ This file tracks improvements to the development workflow, tooling, and develope
   - Only copies `settings.local.json` to preserve user customizations
   - Maintains proper submodule relationship across all worktrees
 
+- **Script Execute Permissions**: Fixed missing execute permissions causing "permission denied" errors
+  - Added execute permission to `protect-local-files.sh`
+  - Worktree creation now automatically runs `chmod +x` on all `.claude/scripts/*.sh`
+  - Prevents permission errors when running Claude commands in worktrees
+  - Fixes issue where git submodule init doesn't preserve execute permissions
+
 ### Enhanced
 - **PostgreSQL Database Setup**: Made database cloning more robust and compatible
   - Uses environment variables: `PGHOST`, `PGPORT`, `PGUSER` with sensible defaults
@@ -25,6 +31,11 @@ This file tracks improvements to the development workflow, tooling, and develope
   - Protects .env files from deletion or overwriting
   - Added to `settings.local.json.example` with Claude Code permission patterns
   - Includes documentation about protection limitations due to Claude Code bugs
+
+- **Seamless Feature Documentation**: Converted `/cmd-feature-document` to use script execution
+  - Added `scripts/feature-document.sh` with full documentation workflow
+  - Added script permissions to `settings.local.json.example`
+  - Eliminates need for bash command approvals during documentation
 
 ### Updated
 - **Submodule Conversion Process**: Fixed README instructions for existing .claude directories
