@@ -143,6 +143,16 @@ The `settings.local.json.example` provides:
 - Hook configurations for notifications
 - Integration with MCP (Model Context Protocol) servers
 - Pre-approved permissions for worktree creation and other development scripts
+- **File Protection System**: Comprehensive deny rules to protect:
+  - `.claude` submodule files from modification (except `settings.local.json`)
+  - `.env` files from deletion or overwriting
+  - Critical configuration files from accidental changes
+
+#### File Protection Limitations
+⚠️ **Important**: Claude Code has documented bugs where deny patterns for Read/Write/Edit tools may not work consistently. The protection works reliably for Bash commands but file operation tools may bypass restrictions. For maximum safety:
+- Always backup critical files before major changes
+- Use git branches and worktrees for isolation
+- Regularly review `.claude` submodule changes before committing
 
 ## Development Workflow
 

@@ -38,7 +38,7 @@ cd your-project && bash <(curl -sSL https://raw.githubusercontent.com/elijahmurr
 
 **For a project with existing .claude directory:**
 ```bash
-mv .claude .claude.backup && git submodule add https://github.com/elijahmurray/dot-claude.git .claude && cp .claude.backup/settings.local.json .claude/settings.local.json 2>/dev/null && rm -rf .claude.backup && git add .gitmodules .claude && git commit -m "Convert .claude to submodule"
+git submodule deinit -f .claude 2>/dev/null; rm -rf .git/modules/.claude 2>/dev/null; cp .claude/settings.local.json settings.backup.json 2>/dev/null; git rm -rf .claude 2>/dev/null || rm -rf .claude; git submodule add https://github.com/elijahmurray/dot-claude.git .claude && cp settings.backup.json .claude/settings.local.json 2>/dev/null && rm -f settings.backup.json && git add .gitmodules .claude && git commit -m "Convert .claude to submodule"
 ```
 
 ### Method 1: As a Git Submodule (Recommended)
@@ -160,23 +160,26 @@ If your project already has a `.claude` directory from the old clone method:
 
 1. **Backup and convert (one-liner):**
    ```bash
-   mv .claude .claude.backup && git submodule add https://github.com/elijahmurray/dot-claude.git .claude && cp .claude.backup/settings.local.json .claude/settings.local.json 2>/dev/null && rm -rf .claude.backup && git add .gitmodules .claude && git commit -m "Convert .claude to submodule"
+   git submodule deinit -f .claude 2>/dev/null; rm -rf .git/modules/.claude 2>/dev/null; cp .claude/settings.local.json settings.backup.json 2>/dev/null; git rm -rf .claude 2>/dev/null || rm -rf .claude; git submodule add https://github.com/elijahmurray/dot-claude.git .claude && cp settings.backup.json .claude/settings.local.json 2>/dev/null && rm -f settings.backup.json && git add .gitmodules .claude && git commit -m "Convert .claude to submodule"
    ```
 
 2. **Or step-by-step:**
    ```bash
-   # Backup existing settings
-   cp .claude/settings.local.json settings.backup.json
+   # Clean up any existing submodule references
+   git submodule deinit -f .claude 2>/dev/null || echo "No existing submodule to deinitialize"
+   rm -rf .git/modules/.claude 2>/dev/null || echo "No cached git directory to remove"
    
-   # Remove old .claude
-   rm -rf .claude
+   # Backup existing settings (if they exist)
+   cp .claude/settings.local.json settings.backup.json 2>/dev/null || echo "No settings.local.json to backup"
+   
+   # Remove old .claude from git and filesystem
+   git rm -rf .claude 2>/dev/null || rm -rf .claude
    
    # Add as submodule
    git submodule add https://github.com/elijahmurray/dot-claude.git .claude
    
-   # Restore settings
-   cp settings.backup.json .claude/settings.local.json
-   rm settings.backup.json
+   # Restore settings (if backup exists)
+   cp settings.backup.json .claude/settings.local.json 2>/dev/null && rm -f settings.backup.json || echo "No settings to restore"
    
    # Commit
    git add .gitmodules .claude
