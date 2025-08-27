@@ -2,6 +2,37 @@
 
 This file tracks improvements to the development workflow, tooling, and developer experience for projects using the dot-claude template.
 
+## [1.2.0] - 2025-08-26
+
+### Fixed
+- **Critical Submodule Issue**: Fixed worktree creation breaking .claude submodule relationship
+  - Replaced content copying with proper `git submodule update --init --recursive`
+  - Prevents .claude files from being tracked as regular git files in worktrees
+  - Only copies `settings.local.json` to preserve user customizations
+  - Maintains proper submodule relationship across all worktrees
+
+### Enhanced
+- **PostgreSQL Database Setup**: Made database cloning more robust and compatible
+  - Uses environment variables: `PGHOST`, `PGPORT`, `PGUSER` with sensible defaults
+  - Falls back to current user, then postgres user for connection attempts
+  - Comprehensive error messages with troubleshooting guidance
+  - Supports any PostgreSQL version (not hardcoded to @14)
+  - Better connection testing and validation
+
+### Added
+- **File Protection System**: Comprehensive deny rules to protect critical files
+  - Prevents modification of .claude submodule files (except settings.local.json)
+  - Protects .env files from deletion or overwriting
+  - Added to `settings.local.json.example` with Claude Code permission patterns
+  - Includes documentation about protection limitations due to Claude Code bugs
+
+### Updated
+- **Submodule Conversion Process**: Fixed README instructions for existing .claude directories
+  - Added proper cleanup of cached git submodule references
+  - Enhanced one-liner command with `git submodule deinit` and cache removal
+  - Better preservation of `settings.local.json` during conversion
+  - More robust error handling and graceful fallbacks
+
 ## [1.1.0] - 2025-08-19
 
 ### Added
