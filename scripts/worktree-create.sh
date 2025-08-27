@@ -91,27 +91,34 @@ if [ -f "$PROJECT_ROOT/credentials.json" ]; then
     echo "✅ Copied Google Calendar credentials"
 fi
 
-# Copy .claude directory with all settings and commands
+# Initialize .claude submodule properly (don't copy content!)
 if [ -d "$PROJECT_ROOT/.claude" ]; then
-    echo "📂 Copying .claude directory..."
+    echo "📦 Initializing .claude submodule in worktree..."
     
     # Check if .claude is a submodule (has a .git file, not directory)
     if [ -f "$PROJECT_ROOT/.claude/.git" ]; then
-        echo "📦 Detected .claude as submodule, copying content only..."
-        # Use rsync to copy everything except .git
-        rsync -av --exclude='.git' "$PROJECT_ROOT/.claude/" ./.claude/
+        echo "📦 Detected .claude as submodule, initializing properly..."
+        # Properly initialize the submodule in this worktree
+        git submodule update --init --recursive
+        echo "✅ Initialized .claude submodule"
+        
+        # Only copy the local settings file (which should be gitignored)
+        if [ -f "$PROJECT_ROOT/.claude/settings.local.json" ]; then
+            cp "$PROJECT_ROOT/.claude/settings.local.json" ./.claude/settings.local.json
+            echo "✅ Copied settings.local.json to worktree"
+        else
+            echo "⚠️  No settings.local.json found - you may need to create one from settings.local.json.example"
+        fi
+        
+        # Ensure all scripts have execute permissions (git submodule init might not preserve them)
+        echo "🔧 Ensuring script permissions are correct..."
+        chmod +x ./.claude/scripts/*.sh 2>/dev/null || true
+        echo "✅ Script permissions updated"
     else
-        # Regular directory copy
+        echo "📂 Detected .claude as regular directory, copying content..."
+        # Regular directory copy (fallback for non-submodule setups)
         cp -r "$PROJECT_ROOT/.claude" ./.claude
-    fi
-    
-    echo "✅ Copied .claude directory with all settings and commands"
-    
-    # Check if settings.local.json exists
-    if [ -f "./.claude/settings.local.json" ]; then
-        echo "✅ Found and copied settings.local.json"
-    else
-        echo "⚠️  No settings.local.json found - you may need to create one from settings.local.json.example"
+        echo "✅ Copied .claude directory"
     fi
 else
     echo "❌ No .claude directory found in main directory"
@@ -154,10 +161,27 @@ fi
 # Database setup - Clone main database for this worktree
 echo "🗄️  Setting up worktree database..."
 if command -v psql &> /dev/null; then
-    if ! pg_isready -h localhost -p 5432 &> /dev/null; then
-        echo "⚠️  PostgreSQL not running - you may need to start it"
-        echo "   Run: brew services start postgresql@14"
+    # Try to detect PostgreSQL connection parameters from environment
+    PG_HOST=${PGHOST:-localhost}
+    PG_PORT=${PGPORT:-5432}
+    PG_USER=${PGUSER:-$USER}
+    
+    echo "🔍 Testing PostgreSQL connection..."
+    echo "   Host: $PG_HOST"
+    echo "   Port: $PG_PORT"
+    echo "   User: $PG_USER"
+    
+    if ! pg_isready -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" &> /dev/null; then
+        echo "⚠️  PostgreSQL not running or not accessible"
+        echo "   Troubleshooting options:"
+        echo "   - Start PostgreSQL: brew services start postgresql"
+        echo "   - Or try: brew services start postgresql@14"
+        echo "   - Or try: brew services start postgresql@15"
+        echo "   - Check if different port/host: export PGHOST=... PGPORT=... PGUSER=..."
+        echo "   - Skip database setup by continuing..."
     else
+        echo "✅ PostgreSQL connection successful"
+        
         # Try to detect main database name from environment files
         MAIN_DB_NAME=""
         
@@ -170,9 +194,11 @@ if command -v psql &> /dev/null; then
                 
                 if [ -n "$DB_FROM_URL" ]; then
                     MAIN_DB_NAME="$DB_FROM_URL"
+                    echo "📍 Found database in $env_file: $MAIN_DB_NAME"
                     break
                 elif [ -n "$DB_FROM_NAME" ]; then
                     MAIN_DB_NAME="$DB_FROM_NAME"
+                    echo "📍 Found database in $env_file: $MAIN_DB_NAME"
                     break
                 fi
             fi
@@ -181,8 +207,13 @@ if command -v psql &> /dev/null; then
         # If no database found in env files, try to detect from existing databases
         if [ -z "$MAIN_DB_NAME" ]; then
             echo "🔍 No database found in env files, checking for existing databases..."
-            # Look for common database patterns (exclude postgres system databases)
-            EXISTING_DBS=$(PGPASSWORD=postgres psql -U postgres -h localhost -p 5432 -lqt 2>/dev/null | cut -d \| -f 1 | grep -E "^[[:space:]]*[a-zA-Z]" | grep -v -E "^[[:space:]]*(postgres|template[01]|)" | head -1 | xargs)
+            # Try with detected user first, fallback to postgres user
+            EXISTING_DBS=$(psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -lqt 2>/dev/null | cut -d \| -f 1 | grep -E "^[[:space:]]*[a-zA-Z]" | grep -v -E "^[[:space:]]*(postgres|template[01]|)" | head -1 | xargs)
+            if [ -z "$EXISTING_DBS" ] && [ "$PG_USER" != "postgres" ]; then
+                echo "🔄 Trying with postgres user..."
+                EXISTING_DBS=$(psql -h "$PG_HOST" -p "$PG_PORT" -U postgres -lqt 2>/dev/null | cut -d \| -f 1 | grep -E "^[[:space:]]*[a-zA-Z]" | grep -v -E "^[[:space:]]*(postgres|template[01]|)" | head -1 | xargs)
+            fi
+            
             if [ -n "$EXISTING_DBS" ]; then
                 MAIN_DB_NAME="$EXISTING_DBS"
                 echo "📍 Found existing database: $MAIN_DB_NAME"
@@ -196,11 +227,19 @@ if command -v psql &> /dev/null; then
             echo "🌿 Branch database: $BRANCH_DB_NAME"
             
             # Check if main database exists
-            if PGPASSWORD=postgres psql -U postgres -h localhost -p 5432 -lqt 2>/dev/null | cut -d \| -f 1 | grep -qw "$MAIN_DB_NAME"; then
+            DB_EXISTS=false
+            if psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -lqt 2>/dev/null | cut -d \| -f 1 | grep -qw "$MAIN_DB_NAME"; then
+                DB_EXISTS=true
+            elif [ "$PG_USER" != "postgres" ] && psql -h "$PG_HOST" -p "$PG_PORT" -U postgres -lqt 2>/dev/null | cut -d \| -f 1 | grep -qw "$MAIN_DB_NAME"; then
+                DB_EXISTS=true
+                PG_USER="postgres"  # Use postgres user for database operations
+            fi
+            
+            if [ "$DB_EXISTS" = true ]; then
                 echo "🔄 Cloning database $MAIN_DB_NAME to $BRANCH_DB_NAME..."
                 
                 # Create the new database
-                if PGPASSWORD=postgres createdb -U postgres -h localhost -p 5432 -T "$MAIN_DB_NAME" "$BRANCH_DB_NAME" 2>/dev/null; then
+                if createdb -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -T "$MAIN_DB_NAME" "$BRANCH_DB_NAME" 2>/dev/null; then
                     echo "✅ Database cloned successfully"
                     
                     # Update environment files to point to the new database
@@ -241,7 +280,7 @@ if command -v psql &> /dev/null; then
                     
                 else
                     echo "❌ Failed to clone database - you may need to create it manually"
-                    echo "   Manual command: createdb -U postgres -T $MAIN_DB_NAME $BRANCH_DB_NAME"
+                    echo "   Manual command: createdb -h $PG_HOST -p $PG_PORT -U $PG_USER -T $MAIN_DB_NAME $BRANCH_DB_NAME"
                 fi
             else
                 echo "⚠️  Main database '$MAIN_DB_NAME' not found"
