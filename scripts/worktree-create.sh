@@ -139,9 +139,23 @@ fi
 # Python project setup
 if [ -f "requirements.txt" ]; then
     echo "🐍 Setting up Python environment..."
-    python -m venv venv
+    
+    # Detect Python command
+    if command -v python3 >/dev/null 2>&1; then
+        PYTHON_CMD="python3"
+    elif command -v python >/dev/null 2>&1; then
+        PYTHON_CMD="python"
+    else
+        echo "❌ Python not found. Please install Python 3."
+        exit 1
+    fi
+    
+    # Create virtual environment
+    $PYTHON_CMD -m venv venv
     source venv/bin/activate  # On Windows: venv\Scripts\activate
-    pip install -r requirements.txt
+    
+    # Install dependencies using pip module for consistency
+    $PYTHON_CMD -m pip install -r requirements.txt
     echo "✅ Python dependencies installed"
 fi
 

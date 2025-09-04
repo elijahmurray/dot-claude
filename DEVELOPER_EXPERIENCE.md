@@ -2,6 +2,15 @@
 
 This file tracks improvements to the development workflow, tooling, and developer experience for projects using the dot-claude template.
 
+## [1.3.1] - 2025-09-03
+
+### Fixed
+- **Python Command Detection**: Fixed worktree creation script failing on systems with only python3
+  - Added automatic detection of available Python command (python3 or python)
+  - Script now works on modern macOS and Linux where 'python' doesn't exist
+  - Uses `$PYTHON_CMD -m pip` for better cross-platform compatibility
+  - Provides clear error message if Python is not installed
+
 ## [1.3.0] - 2025-09-03
 
 ### Enhanced
