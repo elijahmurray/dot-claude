@@ -1,19 +1,7 @@
-# git-cleanup.md
-
-Clean up merged branches and unused worktrees from the repository.
-
-## Instructions
-
-This command helps maintain a clean git environment by removing:
-- Worktrees for branches that have been merged
-- Local branches that have been merged into main
-- Remote branches that have been merged
-- Remote tracking branches that no longer exist
-- Branch-specific databases that are no longer needed
-
-### 0. Setup and Preparation
-```bash
 #!/bin/bash
+# Git Cleanup Script - Enhanced version with PR merge detection
+# This script cleans up merged branches, worktrees, and databases
+
 set -euo pipefail
 trap 'echo "❌ Cleanup failed at line $LINENO"' ERR
 
@@ -50,10 +38,7 @@ git pull origin "$MAIN_BRANCH" --ff-only || git reset --hard "origin/$MAIN_BRANC
 
 # Protected branches that should never be deleted
 PROTECTED_BRANCHES="main master develop staging production release"
-```
 
-### 1. Enhanced Merge Detection Function
-```bash
 # Function to check if a branch is merged (handles PR merges)
 is_branch_merged() {
     local branch="$1"
@@ -120,10 +105,8 @@ safe_delete() {
     echo "   🗑️  Deleting $item_type: $item_name"
     eval "$delete_command"
 }
-```
 
-### 2. Find and Clean Merged Worktrees
-```bash
+# Find and Clean Merged Worktrees
 echo ""
 echo "🔍 Checking for worktrees to clean up..."
 
@@ -164,10 +147,8 @@ if [ $WORKTREE_COUNT -eq 0 ]; then
 else
     echo "✅ Cleaned up $WORKTREE_COUNT worktree(s)"
 fi
-```
 
-### 3. Clean Merged Local Branches
-```bash
+# Clean Merged Local Branches
 echo ""
 echo "🔍 Checking for merged local branches to clean up..."
 
@@ -198,10 +179,8 @@ if [ $BRANCH_COUNT -eq 0 ]; then
 else
     echo "✅ Cleaned up $BRANCH_COUNT local branch(es)"
 fi
-```
 
-### 4. Clean Merged Remote Branches
-```bash
+# Clean Merged Remote Branches
 echo ""
 echo "🔍 Checking for merged remote branches to clean up..."
 
@@ -237,15 +216,14 @@ if [ $REMOTE_COUNT -eq 0 ]; then
 else
     echo "✅ Cleaned up $REMOTE_COUNT remote branch(es)"
 fi
-```
 
-### 5. Clean Branch Databases
-```bash
+# Clean Branch Databases
 echo ""
 echo "🗄️  Checking for branch databases to clean up..."
 
 # Enhanced database detection function
 detect_main_database() {
+    local db_name=""
     # Check environment variables in order of preference
     for env_file in ".env" ".env.local" ".env.development" "backend/.env" "app/.env" "api/.env"; do
         if [ -f "$env_file" ]; then
@@ -253,7 +231,7 @@ detect_main_database() {
             local db_url=$(grep -E "^DATABASE_URL=" "$env_file" 2>/dev/null | head -1)
             if [ -n "$db_url" ]; then
                 # Extract database name from various URL formats
-                local db_name=$(echo "$db_url" | sed -E 's|.*://[^/]*/([^?#"\s]*).*|\1|' | sed 's|"||g' | xargs)
+                db_name=$(echo "$db_url" | sed -E 's|.*://[^/]*/([^?#"\s]*).*|\1|' | sed 's|"||g' | xargs)
                 if [ -n "$db_name" ] && [ "$db_name" != "DATABASE_URL" ]; then
                     echo "$db_name"
                     return 0
@@ -261,7 +239,7 @@ detect_main_database() {
             fi
             
             # Also check for DB_NAME or DATABASE_NAME patterns
-            local db_name=$(grep -E "^(DB_NAME|DATABASE_NAME|POSTGRES_DB)=" "$env_file" 2>/dev/null | head -1 | cut -d'=' -f2 | sed 's|"||g' | xargs)
+            db_name=$(grep -E "^(DB_NAME|DATABASE_NAME|POSTGRES_DB)=" "$env_file" 2>/dev/null | head -1 | cut -d'=' -f2 | sed 's|"||g' | xargs)
             if [ -n "$db_name" ]; then
                 echo "$db_name"
                 return 0
@@ -329,27 +307,21 @@ if command -v psql &> /dev/null; then
 else
     echo "⚠️  PostgreSQL client not found - skipping database cleanup"
 fi
-```
 
-### 6. Prune Remote Tracking Branches
-```bash
+# Prune Remote Tracking Branches
 echo ""
 echo "🔍 Pruning remote tracking branches..."
 
 # Prune remote branches
 git remote prune origin
 echo "✅ Pruned remote tracking references"
-```
 
-### 7. Garbage Collection
-```bash
+# Garbage Collection
 echo ""
 echo "🗑️  Running git garbage collection..."
 git gc --auto
-```
 
-### 8. Summary Report
-```bash
+# Summary Report
 echo ""
 echo "═══════════════════════════════════════════════════════════════"
 echo "🎉 Git cleanup completed!"
@@ -393,50 +365,3 @@ echo "   • Run with 'dry-run' argument to preview changes"
 echo "   • Run with 'dry-run no' to skip confirmation prompts"
 echo "   • Update your main branch regularly: git pull origin $MAIN_BRANCH"
 echo "   • Clean up periodically to maintain repository health"
-```
-
-## Purpose
-This enhanced command helps maintain a clean development environment by:
-- **Updating main branch first** to ensure accurate merge detection
-- **Detecting PR-based merges** not just direct merges
-- Removing worktrees for completed features
-- Deleting local and remote branches that have been merged
-- Cleaning up branch-specific databases
-- Providing dry-run mode for safe preview
-- Offering interactive confirmations for destructive operations
-- Keeping the repository organized and efficient
-
-## Usage Examples
-```bash
-# Preview what would be cleaned (dry run)
-/cmd-git-cleanup dry-run
-
-# Run cleanup with confirmations
-/cmd-git-cleanup
-
-# Run cleanup without confirmations (auto-yes)
-/cmd-git-cleanup no no
-
-# Run dry-run without confirmations
-/cmd-git-cleanup dry-run no
-```
-
-## Options
-- **First argument**: `dry-run` or `--dry-run` to preview without making changes
-- **Second argument**: `no` to skip interactive confirmations (auto-yes mode)
-
-## Important Notes
-- Always fetches and updates main branch before checking merge status
-- Detects branches merged via Pull Requests (squash, rebase, or merge)
-- Protects important branches (main, master, develop, staging, production)
-- Provides recovery information for accidentally deleted branches
-- Checks for uncommitted changes before running
-- Supports both 'main' and 'master' as primary branch names
-- Safely handles database cleanup with multiple detection methods
-
-## Troubleshooting
-If branches aren't being detected as merged:
-1. Ensure your main branch is up-to-date: `git pull origin main`
-2. Check if the branch was merged via PR: `git log --grep="branch-name"`
-3. Verify merge status manually: `git branch --merged main`
-4. For squashed PRs, check: `git cherry main branch-name`

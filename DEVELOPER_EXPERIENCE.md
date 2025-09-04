@@ -2,6 +2,32 @@
 
 This file tracks improvements to the development workflow, tooling, and developer experience for projects using the dot-claude template.
 
+## [1.3.0] - 2025-09-03
+
+### Enhanced
+- **Git Cleanup Command**: Major improvements to `/cmd-git-cleanup` for reliable branch detection
+  - Now updates main branch before checking merge status (fixes 17-commit behind issue)
+  - Detects branches merged via Pull Requests (squash, rebase, or merge)
+  - Added remote branch cleanup functionality
+  - Enhanced database detection with multiple fallback methods
+  - Added dry-run mode for safe preview of changes
+  - Interactive confirmations with opt-out option
+  - Protected branches list (main, master, develop, staging, production)
+  - Comprehensive error handling with line number reporting
+  - Recovery information for accidentally deleted branches
+
+### Fixed
+- **Merge Detection Logic**: Fixed critical issue where PR-merged branches weren't detected
+  - Added `git cherry` and `git rev-list` checks for squashed PRs
+  - Search git log for merge commits mentioning branch names
+  - Properly handles both direct merges and GitHub PR workflows
+
+### Added
+- **Git Cleanup Script**: Created standalone `scripts/git-cleanup.sh` for testing
+  - Executable script with all enhancements from command
+  - Support for dry-run and non-interactive modes
+  - Can be run directly: `./scripts/git-cleanup.sh dry-run`
+
 ## [1.2.0] - 2025-08-26
 
 ### Fixed
