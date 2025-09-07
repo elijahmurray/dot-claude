@@ -323,4 +323,118 @@ echo ""
 echo "✅ Created worktree: $(pwd)"
 echo "🌿 Branch: ${BRANCH_TYPE}/${BRANCH_NAME}"
 echo ""
-echo "You can now work on this feature without affecting other work!"
+
+# CRITICAL: Display prominent session transition instructions
+WORKTREE_PATH="$(pwd)"
+RELATIVE_PATH="trees/${BRANCH_NAME}"
+
+# ANSI color codes for prominent display
+RED='\033[1;31m'
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[1;34m'
+MAGENTA='\033[1;35m'
+CYAN='\033[1;36m'
+WHITE='\033[1;37m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+echo ""
+echo -e "${RED}╔══════════════════════════════════════════════════════════════════════════════╗${RESET}"
+echo -e "${RED}║                                                                              ║${RESET}"
+echo -e "${RED}║${WHITE}${BOLD}                    ⚠️  IMPORTANT: SWITCH TO WORKTREE NOW! ⚠️                   ${RESET}${RED}║${RESET}"
+echo -e "${RED}║                                                                              ║${RESET}"
+echo -e "${RED}║${YELLOW}  Your worktree is ready, but you MUST switch to it for proper isolation!   ${RESET}${RED}║${RESET}"
+echo -e "${RED}║                                                                              ║${RESET}"
+echo -e "${RED}║${WHITE}${BOLD}  REQUIRED NEXT STEPS:                                                       ${RESET}${RED}║${RESET}"
+echo -e "${RED}║                                                                              ║${RESET}"
+echo -e "${RED}║${GREEN}  1. END this Claude session (Ctrl+C or type 'exit')                        ${RESET}${RED}║${RESET}"
+echo -e "${RED}║                                                                              ║${RESET}"
+echo -e "${RED}║${GREEN}  2. Change to the worktree directory:                                       ${RESET}${RED}║${RESET}"
+echo -e "${RED}║${CYAN}     cd ${RELATIVE_PATH}                                                    ${RESET}${RED}║${RESET}"
+echo -e "${RED}║                                                                              ║${RESET}"
+echo -e "${RED}║${GREEN}  3. Start a NEW Claude session:                                             ${RESET}${RED}║${RESET}"
+echo -e "${RED}║${CYAN}     claude code                                                             ${RESET}${RED}║${RESET}"
+echo -e "${RED}║                                                                              ║${RESET}"
+echo -e "${RED}║${MAGENTA}  WHY THIS MATTERS:                                                          ${RESET}${RED}║${RESET}"
+echo -e "${RED}║${WHITE}  • Ensures all commands run in the correct worktree                        ${RESET}${RED}║${RESET}"
+echo -e "${RED}║${WHITE}  • Prevents accidentally modifying wrong files                             ${RESET}${RED}║${RESET}"
+echo -e "${RED}║${WHITE}  • Uses the isolated database and environment                              ${RESET}${RED}║${RESET}"
+echo -e "${RED}║                                                                              ║${RESET}"
+echo -e "${RED}║${YELLOW}${BOLD}  DO NOT CONTINUE WORKING IN THIS SESSION! SWITCH NOW!                      ${RESET}${RED}║${RESET}"
+echo -e "${RED}║                                                                              ║${RESET}"
+echo -e "${RED}╚══════════════════════════════════════════════════════════════════════════════╝${RESET}"
+echo ""
+echo -e "${BOLD}${WHITE}Copy this command: ${CYAN}cd ${RELATIVE_PATH}${RESET}"
+echo ""
+
+# Attempt Warp Terminal automation if available
+if [ "$TERM_PROGRAM" = "WarpTerminal" ]; then
+    echo -e "${CYAN}🚀 Attempting to open new Warp tab in worktree directory...${RESET}"
+    
+    # Try multiple methods to open new Warp tab
+    TAB_CREATED=false
+    TAB_TITLE="${BRANCH_NAME} (worktree)"
+    
+    # Method 1: Try warp-cli if available
+    if command -v warp-cli >/dev/null 2>&1; then
+        if warp-cli open "$WORKTREE_PATH" --new-tab --title "$TAB_TITLE" >/dev/null 2>&1; then
+            TAB_CREATED=true
+            echo -e "${GREEN}✅ New Warp tab opened: ${TAB_TITLE}${RESET}"
+        fi
+    fi
+    
+    # Method 2: Try AppleScript if warp-cli failed
+    if [ "$TAB_CREATED" = false ]; then
+        if osascript -e "tell application \"Warp\"" \
+                     -e "tell current window" \
+                     -e "set newTab to create tab" \
+                     -e "tell newTab" \
+                     -e "set current directory to \"$WORKTREE_PATH\"" \
+                     -e "set title to \"$TAB_TITLE\"" \
+                     -e "end tell" \
+                     -e "end tell" \
+                     -e "end tell" >/dev/null 2>&1; then
+            TAB_CREATED=true
+            echo -e "${GREEN}✅ New Warp tab opened: ${TAB_TITLE}${RESET}"
+        fi
+    fi
+    
+    # Method 3: Try simple AppleScript tab creation
+    if [ "$TAB_CREATED" = false ]; then
+        if osascript -e "tell application \"Warp\" to tell front window to set newTab to create tab" >/dev/null 2>&1; then
+            echo -e "${YELLOW}⚠️  New Warp tab created (you'll need to cd manually)${RESET}"
+            TAB_CREATED=true
+        fi
+    fi
+    
+    if [ "$TAB_CREATED" = true ]; then
+        echo ""
+        echo -e "${GREEN}${BOLD}🎉 Automation Success!${RESET}"
+        echo -e "${WHITE}• New Warp tab opened${RESET}"
+        echo -e "${WHITE}• Switch to the new tab and start: ${CYAN}claude code${RESET}"
+        echo ""
+        echo -e "${YELLOW}If the new tab didn't navigate automatically, run: ${CYAN}cd ${RELATIVE_PATH}${RESET}"
+    else
+        echo -e "${YELLOW}⚠️  Warp automation unavailable - follow manual instructions above${RESET}"
+    fi
+    
+    echo ""
+else
+    echo -e "${BLUE}ℹ️  Non-Warp terminal detected - follow the manual instructions above${RESET}"
+fi
+
+# Send desktop notification using existing notification system
+NOTIFICATION_SCRIPT="$PROJECT_ROOT/.claude/scripts/notify-agent-complete.sh"
+if [ -f "$NOTIFICATION_SCRIPT" ]; then
+    # Use the existing notification system to alert the user
+    NOTIFICATION_MESSAGE="Worktree ready! Switch to: cd trees/${BRANCH_NAME} then start claude code"
+    "$NOTIFICATION_SCRIPT" "attention" "$NOTIFICATION_MESSAGE" "worktree-${BRANCH_NAME}" >/dev/null 2>&1 &
+    echo -e "${CYAN}🔔 Desktop notification sent${RESET}"
+else
+    echo -e "${YELLOW}⚠️  Notification script not found - skipping desktop alert${RESET}"
+fi
+
+echo ""
+echo -e "${GREEN}${BOLD}🌿 Worktree creation complete!${RESET}"
+echo -e "${WHITE}Remember: ${BOLD}Switch sessions to work in isolation!${RESET}"

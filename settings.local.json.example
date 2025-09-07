@@ -222,7 +222,10 @@
       "Bash(scripts/worktree-create.sh:*)",
       "Bash(.claude/scripts/feature-document.sh:*)",
       "Bash(./scripts/feature-document.sh:*)",
-      "Bash(scripts/feature-document.sh:*)"
+      "Bash(scripts/feature-document.sh:*)",
+      "Bash(osascript:*)",
+      "Bash(warp-cli:*)",
+      "Bash(terminal-notifier:*)"
     ]
   },
   "hooks": {

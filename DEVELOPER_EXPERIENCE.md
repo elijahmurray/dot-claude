@@ -2,6 +2,24 @@
 
 This file tracks improvements to the development workflow, tooling, and developer experience for projects using the dot-claude template.
 
+## [1.4.0] - 2025-09-06
+
+### Added
+- **Worktree Session Transition Enhancement**: Comprehensive guidance system for switching to new worktree directories
+  - Prominent visual instructions with red-bordered warning box and color-coded steps
+  - Automatic Warp Terminal tab creation with three fallback automation methods
+  - Desktop notification integration using existing notification system
+  - Copy-paste ready commands for manual execution
+  - Terminal type detection for appropriate automation attempts
+  - Pre-approved permissions for osascript, warp-cli, and terminal-notifier
+
+### Enhanced
+- **Worktree Creation Workflow**: Improved user experience to prevent working in wrong directory
+  - Clear explanation of why session switching is critical
+  - Multi-layered approach ensures users don't miss instructions
+  - Graceful degradation for non-Warp terminals
+  - Integration with existing notification infrastructure
+
 ## [1.3.1] - 2025-09-03
 
 ### Fixed
