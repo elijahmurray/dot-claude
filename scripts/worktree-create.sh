@@ -48,48 +48,100 @@ cd trees/${BRANCH_NAME}
 
 echo "🔧 Setting up worktree environment..."
 
-# Copy environment files
-echo "📄 Copying environment configuration..."
-if [ -f "$PROJECT_ROOT/.env.example" ]; then
-    if [ -f "$PROJECT_ROOT/.env" ]; then
-        cp "$PROJECT_ROOT/.env" .env
-        echo "✅ Copied backend .env"
-    else
-        cp "$PROJECT_ROOT/.env.example" .env
-        echo "⚠️  Copied .env.example - you'll need to configure API keys"
+# Copy environment files - Dynamic discovery approach
+echo "📄 Copying environment configuration files..."
+
+# Find and copy all .env* files from the project root, maintaining directory structure
+echo "🔍 Discovering environment files..."
+env_files_found=0
+
+# Use find to locate all .env* files, excluding certain directories
+find "$PROJECT_ROOT" -type f \( -name ".env*" -o -name "*.env" \) \
+    ! -path "*/node_modules/*" \
+    ! -path "*/.git/*" \
+    ! -path "*/trees/*" \
+    ! -path "*/venv/*" \
+    ! -path "*/__pycache__/*" \
+    ! -path "*/dist/*" \
+    ! -path "*/build/*" | while read -r env_file; do
+
+    # Get relative path from project root
+    rel_path="${env_file#$PROJECT_ROOT/}"
+    target_dir="$(dirname "$rel_path")"
+
+    # Create target directory if needed
+    if [ "$target_dir" != "." ]; then
+        mkdir -p "$target_dir"
     fi
-else
-    echo "❌ No .env.example found in main directory"
+
+    # Copy the file
+    cp "$env_file" "$rel_path"
+    echo "✅ Copied $rel_path"
+    env_files_found=$((env_files_found + 1))
+done
+
+# If no .env files found, look for .env.example files as fallback
+if [ $env_files_found -eq 0 ]; then
+    echo "⚠️  No .env files found, looking for .env.example templates..."
+    find "$PROJECT_ROOT" -type f -name ".env.example" \
+        ! -path "*/node_modules/*" \
+        ! -path "*/.git/*" \
+        ! -path "*/trees/*" | while read -r example_file; do
+
+        rel_path="${example_file#$PROJECT_ROOT/}"
+        target_path="${rel_path%.example}"  # Remove .example suffix
+        target_dir="$(dirname "$target_path")"
+
+        if [ "$target_dir" != "." ]; then
+            mkdir -p "$target_dir"
+        fi
+
+        cp "$example_file" "$target_path"
+        echo "⚠️  Copied $rel_path as $target_path - configure as needed"
+    done
 fi
 
-# Copy frontend environment files
-if [ -f "$PROJECT_ROOT/frontend/.env.example" ]; then
-    mkdir -p frontend
-    if [ -f "$PROJECT_ROOT/frontend/.env.local" ]; then
-        cp "$PROJECT_ROOT/frontend/.env.local" frontend/.env.local
-        echo "✅ Copied frontend .env.local"
-    else
-        cp "$PROJECT_ROOT/frontend/.env.example" frontend/.env.local
-        echo "⚠️  Copied frontend/.env.example - you'll need to configure OAuth keys"
+# Copy other configuration files (credentials, secrets, local configs)
+echo "🔍 Looking for additional configuration files..."
+find "$PROJECT_ROOT" -maxdepth 3 -type f \( \
+    -name "*credentials*.json" -o \
+    -name "*secret*" -o \
+    -name "*config.local*" -o \
+    -name "*.key" -o \
+    -name "*.pem" \) \
+    ! -path "*/node_modules/*" \
+    ! -path "*/.git/*" \
+    ! -path "*/trees/*" \
+    ! -path "*/venv/*" | while read -r config_file; do
+
+    rel_path="${config_file#$PROJECT_ROOT/}"
+    target_dir="$(dirname "$rel_path")"
+
+    if [ "$target_dir" != "." ]; then
+        mkdir -p "$target_dir"
     fi
-else
-    echo "❌ No frontend/.env.example found in main directory"
-fi
+
+    cp "$config_file" "$rel_path"
+    echo "✅ Copied config: $rel_path"
+done
 
 # Copy frontend lib directory for auth and utilities
 if [ -d "$PROJECT_ROOT/frontend/lib" ]; then
     mkdir -p frontend
     cp -r "$PROJECT_ROOT/frontend/lib" frontend/
     echo "✅ Copied frontend/lib directory"
-else
-    echo "❌ No frontend/lib directory found"
 fi
 
-# Copy Google credentials if needed
-if [ -f "$PROJECT_ROOT/credentials.json" ]; then
-    cp "$PROJECT_ROOT/credentials.json" ./credentials.json
-    echo "✅ Copied Google Calendar credentials"
-fi
+# Copy any other project-specific directories that might contain local configs
+# Look for directories with .env files to identify project structure
+for dir in backend frontend api server client app src; do
+    if [ -d "$PROJECT_ROOT/$dir" ] && [ ! -d "$dir" ]; then
+        # Check if this directory has important non-git files
+        if find "$PROJECT_ROOT/$dir" -maxdepth 1 -name ".env*" -o -name "*config.local*" | grep -q .; then
+            echo "📁 Found $dir directory with local configs"
+        fi
+    fi
+done
 
 # Initialize .claude submodule properly (don't copy content!)
 if [ -d "$PROJECT_ROOT/.claude" ]; then

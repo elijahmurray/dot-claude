@@ -2,6 +2,24 @@
 
 This file tracks improvements to the development workflow, tooling, and developer experience for projects using the dot-claude template.
 
+## [1.5.0] - 2025-09-16
+
+### Enhanced
+- **Worktree Environment File Handling**: Dynamic discovery and copying of all environment configuration files
+  - Replaced hardcoded file paths with intelligent `find`-based discovery
+  - Automatically discovers and copies all `.env*` files throughout project hierarchy
+  - Maintains original directory structure (backend/.env, frontend/.env.local, etc.)
+  - Falls back to `.env.example` templates when actual files don't exist
+  - Extended search for credentials, secrets, and local config files
+  - Excludes build/dependency directories (node_modules, venv, dist, build)
+  - Works with any project structure without modification
+
+### Fixed
+- **Missing Environment Files in Worktrees**: Fixed authentication failures caused by incomplete file copying
+  - Previously only copied root `.env` and `frontend/.env.local`
+  - Now discovers all environment files dynamically
+  - Ensures subdirectory `.env` files are properly copied
+
 ## [1.4.0] - 2025-09-06
 
 ### Added
