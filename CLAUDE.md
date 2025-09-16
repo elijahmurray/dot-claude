@@ -252,21 +252,47 @@ docker-compose down
 
 ### Working in Subdirectories
 
-When working in subdirectories (like `frontend/` or `backend/`), the notification scripts may not work properly due to relative paths. To fix this, use the `--add-dir` flag when starting Claude Code:
+The template includes robust support for working in subdirectories (like `frontend/` or `backend/`). Scripts and notifications work automatically from any directory.
+
+#### How It Works
+1. **Notification hooks** use a search pattern to find scripts up to 5 directory levels
+2. **Scripts** include self-location detection to find project root
+3. **Universal wrapper** (`find-and-run.sh`) can execute any script from anywhere
+
+#### Best Practices
+
+For maximum reliability when working in subdirectories:
 
 ```bash
-# Start from project root to ensure scripts work
+# Recommended: Start from project root with --add-dir
 claude code --add-dir .
 
-# Or if you need to work in a specific directory
+# Working in frontend directory
 cd frontend
 claude code --add-dir ..
+
+# Working in deeply nested directories
+cd backend/src/services
+claude code --add-dir ../../..
 ```
 
-This ensures that:
-- Notification scripts can be found at `.claude/scripts/`
-- All custom commands work properly
-- Settings paths resolve correctly
+Using `--add-dir` ensures:
+- All paths resolve immediately without searching
+- Better performance for script execution
+- Commands and notifications work reliably
+- No "file not found" errors
+
+#### Manual Script Execution
+
+If you need to run scripts manually from subdirectories:
+
+```bash
+# Use the universal wrapper (works from anywhere)
+bash -c 'for dir in . .. ../.. ../../..; do [ -f "$dir/.claude/scripts/notify-agent-complete.sh" ] && "$dir/.claude/scripts/notify-agent-complete.sh" main "Done" && break; done'
+
+# Or use the find-and-run wrapper
+.claude/scripts/find-and-run.sh notify-agent-complete.sh main "Task complete"
+```
 
 ## Working with the .claude Submodule
 

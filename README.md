@@ -190,18 +190,42 @@ If your project already has a `.claude` directory from the old clone method:
 
 ### Working in Subdirectories
 
-If notification scripts don't work when you're in subdirectories (e.g., `frontend/`, `backend/`), use the `--add-dir` flag:
+The template now includes robust support for working in subdirectories. There are two approaches:
+
+#### Automatic Path Resolution (Default)
+The notification hooks and scripts automatically search for the project root, so they work from any directory depth:
+- Hooks use a search pattern to find scripts up to 5 levels deep
+- Scripts include self-location detection
+- No special configuration needed
+
+#### Using --add-dir Flag (Alternative)
+For maximum reliability, you can explicitly tell Claude about your project structure:
 
 ```bash
-# From project root
+# From project root (recommended)
 claude code --add-dir .
 
 # From a subdirectory
 cd frontend
 claude code --add-dir ..
+
+# From deeply nested directories
+cd frontend/src/components
+claude code --add-dir ../../..
 ```
 
-This ensures all `.claude` scripts and commands work properly regardless of your current directory.
+Benefits of `--add-dir`:
+- Ensures all paths resolve correctly
+- Better performance (no searching needed)
+- Recommended for complex project structures
+
+#### Universal Script Wrapper
+For custom scripts, use the `find-and-run.sh` wrapper:
+
+```bash
+# Works from any directory
+.claude/scripts/find-and-run.sh notify-agent-complete.sh main "Task complete"
+```
 
 ### Fixing Existing Broken Worktrees
 
