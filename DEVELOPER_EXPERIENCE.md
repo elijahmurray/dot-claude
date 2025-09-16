@@ -2,6 +2,28 @@
 
 This file tracks improvements to the development workflow, tooling, and developer experience for projects using the dot-claude template.
 
+## [1.6.0] - 2025-09-16
+
+### Added
+- **Universal Script Path Resolution**: Comprehensive solution for working in subdirectories
+  - Created `scripts/find-and-run.sh` universal wrapper for executing any .claude script from any directory
+  - Enhanced notification hooks with automatic directory tree searching (up to 5 levels)
+  - Added self-location detection to notification scripts
+  - Supports both `.claude/scripts/` and `scripts/` directory layouts
+
+### Enhanced
+- **Subdirectory Work Support**: Multiple approaches for reliable script execution
+  - Automatic path resolution eliminates need for `--add-dir` in most cases
+  - Preserved `--add-dir` flag as alternative for maximum reliability
+  - Updated documentation with comprehensive examples and best practices
+  - Enhanced both CLAUDE.md and README.md with detailed subdirectory guidance
+
+### Fixed
+- **Notification Script Failures in Subdirectories**: Fixed "No such file or directory" errors
+  - Hooks now search directory tree automatically to find scripts
+  - Scripts work from any project depth (frontend/, backend/src/components/, etc.)
+  - No configuration changes required for existing projects
+
 ## [1.5.0] - 2025-09-16
 
 ### Enhanced

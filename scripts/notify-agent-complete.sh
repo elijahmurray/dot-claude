@@ -17,6 +17,14 @@
 #   ./notify-agent-complete.sh main "All MCP servers tested successfully" "project-work" "Fixed 5 bugs and added comprehensive test coverage"
 #   ./notify-agent-complete.sh attention "Build failed - check logs" "deploy-tab"
 
+# Script self-location detection for running from any directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
+
+# Debug output (comment out in production)
+# echo "Script running from: $SCRIPT_DIR" >&2
+# echo "Project root: $PROJECT_ROOT" >&2
+
 # Prevent infinite loops by checking if we're already running
 LOCKFILE="/tmp/claude_notify.lock"
 if [ -f "$LOCKFILE" ]; then

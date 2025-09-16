@@ -225,7 +225,8 @@
       "Bash(scripts/feature-document.sh:*)",
       "Bash(osascript:*)",
       "Bash(warp-cli:*)",
-      "Bash(terminal-notifier:*)"
+      "Bash(terminal-notifier:*)",
+      "Bash(bash -c:*)"
     ]
   },
   "hooks": {
@@ -234,7 +235,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/scripts/notify-agent-complete.sh notification 'Claude needs your attention'"
+            "command": "bash -c 'for dir in . .. ../.. ../../.. ../../../..; do [ -f \"$dir/.claude/scripts/notify-agent-complete.sh\" ] && exec \"$dir/.claude/scripts/notify-agent-complete.sh\" notification \"Claude needs your attention\" && break; done' 2>/dev/null || true"
           }
         ]
       }
@@ -244,7 +245,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/scripts/notify-agent-complete.sh main 'Claude has finished'"
+            "command": "bash -c 'for dir in . .. ../.. ../../.. ../../../..; do [ -f \"$dir/.claude/scripts/notify-agent-complete.sh\" ] && exec \"$dir/.claude/scripts/notify-agent-complete.sh\" main \"Claude has finished\" && break; done' 2>/dev/null || true"
           }
         ]
       }
