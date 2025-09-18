@@ -39,7 +39,29 @@ echo "🔍 Preparing git cleanup..."
 git fetch --all --prune
 
 # Get main branch name (could be 'main' or 'master')
-MAIN_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "main")
+MAIN_BRANCH=""
+
+# Try multiple methods to detect main branch
+if [ -z "$MAIN_BRANCH" ]; then
+    MAIN_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || true)
+fi
+
+# Fallback: check which common branch names exist
+if [ -z "$MAIN_BRANCH" ]; then
+    for branch in main master; do
+        if git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+            MAIN_BRANCH="$branch"
+            break
+        fi
+    done
+fi
+
+# Final fallback
+if [ -z "$MAIN_BRANCH" ]; then
+    MAIN_BRANCH="main"
+fi
+
+echo "ℹ️  Using main branch: $MAIN_BRANCH"
 
 # Ensure we're on the main branch
 git checkout "$MAIN_BRANCH" 2>/dev/null || git checkout main 2>/dev/null || git checkout master 2>/dev/null
@@ -54,46 +76,82 @@ PROTECTED_BRANCHES="main master develop staging production release"
 
 ### 1. Enhanced Merge Detection Function
 ```bash
-# Function to check if a branch is merged (handles PR merges)
+# Function to check if a branch is merged (handles PR merges and modern workflows)
 is_branch_merged() {
     local branch="$1"
     local base_branch="${2:-$MAIN_BRANCH}"
-    
+    local branch_name=$(basename "$branch")
+
     # Skip if branch is protected
-    if echo "$PROTECTED_BRANCHES" | grep -qw "$(basename "$branch")"; then
+    if echo "$PROTECTED_BRANCHES" | grep -qw "$branch_name"; then
         return 1
     fi
-    
-    # Check traditional merge
-    if git branch --merged "$base_branch" 2>/dev/null | grep -q "^[* ]*$(basename "$branch")$"; then
-        return 0
-    fi
-    
-    # For remote branches, check if they exist
-    if [[ "$branch" == origin/* ]]; then
-        local local_branch="${branch#origin/}"
-        # Check if the branch's commits are in main (catches PR merges)
-        if git rev-list --left-right --count "$base_branch"..."$branch" 2>/dev/null | grep -q "^0"; then
+
+    # Method 1: Check traditional merge for local branches
+    if [[ "$branch" != origin/* ]]; then
+        if git branch --merged "$base_branch" 2>/dev/null | grep -q "^[* ]*$branch_name$"; then
             return 0
         fi
-        
-        # Check if there are no unique commits in the branch
+    fi
+
+    # Method 2: For remote branches, check if remote branch is fully merged
+    if [[ "$branch" == origin/* ]]; then
+        # Check if the remote branch has no unique commits compared to base
         if [ -z "$(git rev-list "$base_branch".."$branch" 2>/dev/null)" ]; then
             return 0
         fi
+
+        # Check commit count - if 0 commits ahead, it's merged
+        local ahead_count=$(git rev-list --count "$base_branch".."$branch" 2>/dev/null || echo "1")
+        if [ "$ahead_count" = "0" ]; then
+            return 0
+        fi
     else
-        # Check if the branch's commits are in main (catches PR merges)
+        # For local branches, check against remote equivalent if it exists
+        if git show-ref --verify --quiet "refs/remotes/origin/$branch_name"; then
+            # Check if remote branch is fully merged
+            if [ -z "$(git rev-list "$base_branch"..origin/"$branch_name" 2>/dev/null)" ]; then
+                return 0
+            fi
+        fi
+
+        # Check if local branch's commits are in main (catches PR merges)
         if [ -z "$(git cherry "$base_branch" "$branch" 2>/dev/null | grep '^+')" ]; then
             return 0
         fi
     fi
-    
-    # Check git log for PR merge commits mentioning this branch
-    local branch_name=$(basename "$branch")
-    if git log "$base_branch" --grep="$branch_name" --oneline -50 2>/dev/null | grep -qE "(Merge pull request|Merge branch|#[0-9]+).*$branch_name"; then
+
+    # Method 3: Check for PR merge commits in base branch
+    # Look for merge commits that mention this branch
+    if git log "$base_branch" --grep="$branch_name" --oneline -100 2>/dev/null | grep -qE "(Merge pull request|Merge branch|#[0-9]+).*$branch_name"; then
         return 0
     fi
-    
+
+    # Method 4: Check for squash/rebase merges by looking at commit messages
+    # If all commits from the branch appear in main with same message, it was squashed
+    if [[ "$branch" != origin/* ]]; then
+        local branch_commits=$(git rev-list --count "$base_branch".."$branch" 2>/dev/null || echo "0")
+        if [ "$branch_commits" -gt 0 ] && [ "$branch_commits" -lt 20 ]; then
+            local branch_messages=$(git log --format="%s" "$base_branch".."$branch" 2>/dev/null)
+            if [ -n "$branch_messages" ]; then
+                local found_in_main=0
+                local total_commits=0
+                while IFS= read -r commit_msg; do
+                    [ -z "$commit_msg" ] && continue
+                    ((total_commits++))
+                    if git log "$base_branch" --grep="$commit_msg" --oneline -1 2>/dev/null | grep -q "."; then
+                        ((found_in_main++))
+                    fi
+                done <<< "$branch_messages"
+
+                # If more than 60% of commit messages found in main, consider it merged
+                if [ "$total_commits" -gt 0 ] && [ $((found_in_main * 100 / total_commits)) -gt 60 ]; then
+                    return 0
+                fi
+            fi
+        fi
+    fi
+
     return 1
 }
 
@@ -172,13 +230,14 @@ echo ""
 echo "🔍 Checking for merged local branches to clean up..."
 
 # Get all local branches except current and protected
-LOCAL_BRANCHES=$(git branch --format='%(refname:short)' | grep -vE "^\*|^($MAIN_BRANCH)$" || true)
+LOCAL_BRANCHES=$(git branch | sed 's/^[* +]*//' | grep -vE "^($MAIN_BRANCH)$" || true)
 BRANCH_COUNT=0
 
 if [ -n "$LOCAL_BRANCHES" ]; then
-    for BRANCH in $LOCAL_BRANCHES; do
+    while IFS= read -r BRANCH; do
         BRANCH=$(echo "$BRANCH" | xargs)  # Trim whitespace
-        
+        [ -z "$BRANCH" ] && continue
+
         # Check if branch is merged
         if is_branch_merged "$BRANCH"; then
             echo "🗑️  Found merged branch: $BRANCH"
@@ -188,7 +247,7 @@ if [ -n "$LOCAL_BRANCHES" ]; then
         else
             echo "ℹ️  Keeping branch: $BRANCH (not merged)"
         fi
-    done
+    done <<< "$LOCAL_BRANCHES"
 else
     echo "✅ No local branches to check"
 fi
@@ -206,20 +265,21 @@ echo ""
 echo "🔍 Checking for merged remote branches to clean up..."
 
 # Get all remote branches except main/master
-REMOTE_BRANCHES=$(git branch -r | sed 's/^[[:space:]]*//' | grep -v HEAD | grep -vE "^origin/($MAIN_BRANCH|master|main)$" || true)
+REMOTE_BRANCHES=$(git branch -r | sed 's/^[[:space:]*+]*//' | grep -v HEAD | grep -vE "^origin/($MAIN_BRANCH|master|main)$" || true)
 REMOTE_COUNT=0
 
 if [ -n "$REMOTE_BRANCHES" ]; then
-    for BRANCH in $REMOTE_BRANCHES; do
+    while IFS= read -r BRANCH; do
         BRANCH=$(echo "$BRANCH" | xargs)
+        [ -z "$BRANCH" ] && continue
         BRANCH_NAME=${BRANCH#origin/}
-        
+
         # Skip protected branches
         if echo "$PROTECTED_BRANCHES" | grep -qw "$BRANCH_NAME"; then
             echo "⚠️  Skipping protected branch: $BRANCH"
             continue
         fi
-        
+
         # Check if branch is merged
         if is_branch_merged "$BRANCH"; then
             echo "🗑️  Found merged remote branch: $BRANCH"
@@ -227,7 +287,7 @@ if [ -n "$REMOTE_BRANCHES" ]; then
                 ((REMOTE_COUNT++))
             fi
         fi
-    done
+    done <<< "$REMOTE_BRANCHES"
 else
     echo "✅ No remote branches to check"
 fi
@@ -398,7 +458,11 @@ echo "   • Clean up periodically to maintain repository health"
 ## Purpose
 This enhanced command helps maintain a clean development environment by:
 - **Updating main branch first** to ensure accurate merge detection
-- **Detecting PR-based merges** not just direct merges
+- **Detecting PR-based merges** including squash, rebase, and traditional merges
+- **Properly handling remote branch merge detection** for modern workflows
+- **Robust main branch detection** with multiple fallback methods
+- **Fixed branch parsing** to handle git formatting symbols correctly
+- **Improved loop handling** to prevent concatenation issues
 - Removing worktrees for completed features
 - Deleting local and remote branches that have been merged
 - Cleaning up branch-specific databases

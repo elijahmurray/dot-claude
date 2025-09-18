@@ -2,6 +2,30 @@
 
 This file tracks improvements to the development workflow, tooling, and developer experience for projects using the dot-claude template.
 
+## [1.7.0] - 2025-09-17
+
+### Enhanced
+- **Multi-Directory Python Virtual Environment Support**: Automatic detection and setup of Python environments in subdirectories
+  - Searches for `requirements.txt` in common locations: root, backend/, api/, server/, app/, src/
+  - Creates virtual environments in the same directory as each `requirements.txt`
+  - Supports multiple Python projects in one repository
+  - Example: `backend/requirements.txt` → creates `backend/venv/` automatically
+
+### Added
+- **Python Environment Verification**: Post-creation verification with troubleshooting guidance
+  - Pre-flight Python availability check with version reporting
+  - Comprehensive status summary showing all created environments
+  - Clear activation instructions for each project structure
+  - Manual setup commands provided when automation fails
+  - Troubleshooting section with common solutions
+
+### Fixed
+- **"Virtual Environment Not Found" Error in Worktrees**: Resolved server startup failures
+  - Previously only checked root directory for `requirements.txt`
+  - Now handles full-stack projects with `backend/` structure correctly
+  - Each subdirectory gets its own isolated virtual environment
+  - Immediate functionality after worktree creation
+
 ## [1.6.0] - 2025-09-16
 
 ### Added

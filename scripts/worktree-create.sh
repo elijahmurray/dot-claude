@@ -188,27 +188,136 @@ if [ -f "$PROJECT_ROOT/frontend/CLAUDE.md" ]; then
     echo "✅ Copied frontend CLAUDE.md"
 fi
 
-# Python project setup
-if [ -f "requirements.txt" ]; then
-    echo "🐍 Setting up Python environment..."
-    
-    # Detect Python command
-    if command -v python3 >/dev/null 2>&1; then
-        PYTHON_CMD="python3"
-    elif command -v python >/dev/null 2>&1; then
-        PYTHON_CMD="python"
-    else
-        echo "❌ Python not found. Please install Python 3."
-        exit 1
+# Enhanced Python project setup - Support multiple directories
+echo "🐍 Detecting Python projects..."
+
+# Check if Python is available at all before proceeding
+PYTHON_CMD=""
+if command -v python3 >/dev/null 2>&1; then
+    PYTHON_CMD="python3"
+    echo "   ✅ Python 3 found: $(python3 --version)"
+elif command -v python >/dev/null 2>&1; then
+    PYTHON_CMD="python"
+    echo "   ✅ Python found: $(python --version)"
+else
+    echo "   ❌ Python not found - Python projects will need manual setup"
+    echo "   💡 Install Python: brew install python3 (macOS) or apt install python3 (Ubuntu)"
+fi
+
+# Function to setup Python environment in a directory
+setup_python_env() {
+    local dir="$1"
+    local requirements_file="$2"
+
+    echo "📦 Setting up Python environment in $dir..."
+
+    # Use the globally detected Python command
+    if [ -z "$PYTHON_CMD" ]; then
+        echo "   ❌ Python not available - skipping $dir"
+        return 1
     fi
-    
+
+    # Change to the target directory
+    local original_dir=$(pwd)
+    cd "$dir"
+
     # Create virtual environment
+    echo "   🔧 Creating virtual environment..."
     $PYTHON_CMD -m venv venv
-    source venv/bin/activate  # On Windows: venv\Scripts\activate
-    
-    # Install dependencies using pip module for consistency
-    $PYTHON_CMD -m pip install -r requirements.txt
-    echo "✅ Python dependencies installed"
+
+    # Activate virtual environment
+    if [ -f "venv/bin/activate" ]; then
+        source venv/bin/activate
+        echo "   ✅ Virtual environment activated"
+
+        # Install dependencies using pip module for consistency
+        echo "   📥 Installing dependencies from $requirements_file..."
+        $PYTHON_CMD -m pip install -r "$requirements_file"
+        echo "   ✅ Python dependencies installed in $dir"
+
+        # Deactivate for next setup
+        deactivate 2>/dev/null || true
+    else
+        echo "   ❌ Failed to create virtual environment in $dir"
+        cd "$original_dir"
+        return 1
+    fi
+
+    cd "$original_dir"
+    return 0
+}
+
+# Track Python environments created
+PYTHON_ENVS_CREATED=0
+
+# Check common Python project directories
+PYTHON_DIRS=("." "backend" "api" "server" "app" "src")
+
+for dir in "${PYTHON_DIRS[@]}"; do
+    requirements_path="$dir/requirements.txt"
+
+    if [ -f "$requirements_path" ]; then
+        echo "🔍 Found Python project: $requirements_path"
+
+        # Skip if Python not available
+        if [ -z "$PYTHON_CMD" ]; then
+            echo "   ⚠️  Skipping $dir - Python not available"
+            continue
+        fi
+
+        # Ensure directory exists (it should, but just in case)
+        mkdir -p "$dir"
+
+        if setup_python_env "$dir" "requirements.txt"; then
+            ((PYTHON_ENVS_CREATED++))
+        fi
+    fi
+done
+
+# Summary of Python setup
+if [ $PYTHON_ENVS_CREATED -eq 0 ]; then
+    echo "ℹ️  No Python projects detected (no requirements.txt found)"
+elif [ $PYTHON_ENVS_CREATED -eq 1 ]; then
+    echo "✅ Successfully set up 1 Python environment"
+else
+    echo "✅ Successfully set up $PYTHON_ENVS_CREATED Python environments"
+fi
+
+# Provide activation guidance and troubleshooting
+if [ $PYTHON_ENVS_CREATED -gt 0 ]; then
+    echo ""
+    echo "💡 Virtual Environment Activation Guide:"
+
+    for dir in "${PYTHON_DIRS[@]}"; do
+        if [ -f "$dir/requirements.txt" ] && [ -f "$dir/venv/bin/activate" ]; then
+            if [ "$dir" = "." ]; then
+                echo "   • Root project: source venv/bin/activate"
+            else
+                echo "   • $dir project: cd $dir && source venv/bin/activate"
+            fi
+        fi
+    done
+
+    echo ""
+    echo "🔧 Troubleshooting Virtual Environment Issues:"
+    echo "   • If 'Virtual environment not found' error occurs:"
+    echo "     1. Ensure you're in the correct directory"
+    echo "     2. Check that venv directory exists: ls -la */venv 2>/dev/null || ls -la venv 2>/dev/null"
+    echo "     3. Manually activate: cd backend && source venv/bin/activate (for backend projects)"
+    echo "     4. If missing, recreate: cd backend && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
+    echo ""
+    echo "   • Common activation commands by project structure:"
+
+    for dir in "${PYTHON_DIRS[@]}"; do
+        if [ -f "$dir/requirements.txt" ]; then
+            if [ "$dir" = "." ]; then
+                echo "     - Root-level Python: source venv/bin/activate"
+            else
+                echo "     - $dir/: cd $dir && source venv/bin/activate"
+            fi
+        fi
+    done
+    echo ""
 fi
 
 # Node project setup  
@@ -362,12 +471,79 @@ else
     echo "   Install with: brew install postgresql"
 fi
 
-# Run prerequisite check
-echo "🔍 Running final environment check..."
+# Run final environment verification
+echo "🔍 Running final environment verification..."
+
+# Verify Python environments were created successfully
+PYTHON_ENV_STATUS="✅ Ready"
+FAILED_ENVS=""
+
+for dir in "${PYTHON_DIRS[@]}"; do
+    if [ -f "$dir/requirements.txt" ]; then
+        if [ ! -f "$dir/venv/bin/activate" ]; then
+            PYTHON_ENV_STATUS="❌ Issues detected"
+            if [ -z "$FAILED_ENVS" ]; then
+                FAILED_ENVS="$dir"
+            else
+                FAILED_ENVS="$FAILED_ENVS, $dir"
+            fi
+        fi
+    fi
+done
+
+echo "🐍 Python environments: $PYTHON_ENV_STATUS"
+if [ "$PYTHON_ENV_STATUS" = "❌ Issues detected" ]; then
+    echo "   ⚠️  Failed to create virtual environments in: $FAILED_ENVS"
+    echo "   💡 Manual setup command:"
+    for dir in backend api server app; do
+        if [ -f "$dir/requirements.txt" ] && [ ! -f "$dir/venv/bin/activate" ]; then
+            echo "      cd $dir && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
+        fi
+    done
+fi
+
+# Run prerequisite check if available
 if [ -f "$PROJECT_ROOT/scripts/check_prerequisites.sh" ]; then
+    echo "🔧 Running project prerequisite check..."
     "$PROJECT_ROOT/scripts/check_prerequisites.sh"
 else
-    echo "⚠️  Prerequisites check script not found"
+    echo "ℹ️  No additional prerequisites check script found"
+fi
+
+# Final environment summary
+echo ""
+echo "📋 Worktree Environment Summary:"
+echo "   📁 Location: $(pwd)"
+echo "   🌿 Branch: ${BRANCH_TYPE}/${BRANCH_NAME}"
+
+# List created Python environments
+if [ $PYTHON_ENVS_CREATED -gt 0 ]; then
+    echo "   🐍 Python environments:"
+    for dir in "${PYTHON_DIRS[@]}"; do
+        if [ -f "$dir/requirements.txt" ] && [ -f "$dir/venv/bin/activate" ]; then
+            if [ "$dir" = "." ]; then
+                echo "      ✅ Root (venv/)"
+            else
+                echo "      ✅ $dir (${dir}/venv/)"
+            fi
+        fi
+    done
+else
+    echo "   🐍 Python environments: None (no requirements.txt found)"
+fi
+
+# List Node environments
+if [ -f "package.json" ] || [ -f "frontend/package.json" ]; then
+    echo "   📦 Node.js dependencies: ✅ Installed"
+else
+    echo "   📦 Node.js dependencies: None (no package.json found)"
+fi
+
+# Database status
+if [ -n "$BRANCH_DB_NAME" ]; then
+    echo "   🗄️  Database: ✅ $BRANCH_DB_NAME (cloned)"
+else
+    echo "   🗄️  Database: ⚠️  Not configured (check database setup section above)"
 fi
 
 # Show summary
