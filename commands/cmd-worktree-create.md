@@ -1,115 +1,88 @@
-# worktree-create.md
+# Create Worktree
 
-Create a new Git worktree for parallel feature development.
+Create a new Git worktree for isolated feature development.
 
 ## Variables
-- BRANCH_TYPE: The type (feature, bugfix, hotfix)
-- BRANCH_NAME: The name of your feature
+- BRANCH_NAME: The name of your feature/branch (required)
+- BRANCH_TYPE: The branch type - feature, bugfix, hotfix (default: feature)
+- SETUP_TYPE: What to set up - full, frontend-backend, frontend-only, backend-only, backend-db
 
 ## Instructions
 
-Run the automated worktree setup script. The script will automatically detect the correct path regardless of your current directory:
+First, ask the user what kind of setup they need by presenting these options:
+
+**What environment do you need for this work?**
+
+1. **Full** (frontend + backend + database clone) - Complete isolation, use when changing DB schema
+2. **Frontend + Backend** (no database clone) - Use shared dev database, fastest for most work
+3. **Frontend only** - Just npm install, for pure UI work
+4. **Backend only** - Just Python venv, for API-only changes
+5. **Backend + Database** - Python + isolated database, for backend + schema changes
+
+Based on the user's choice, run the worktree creation script with the appropriate flags:
 
 ```bash
-# From project root
-.claude/scripts/worktree-create.sh ${BRANCH_TYPE:-"feature"} ${BRANCH_NAME}
+# Full setup (frontend + backend + db)
+.claude/scripts/worktree-create.sh "${BRANCH_TYPE:-feature}" "${BRANCH_NAME}" --full
 
-# From any subdirectory
-../scripts/worktree-create.sh ${BRANCH_TYPE:-"feature"} ${BRANCH_NAME}
+# Frontend + Backend (no db clone)
+.claude/scripts/worktree-create.sh "${BRANCH_TYPE:-feature}" "${BRANCH_NAME}" --frontend --backend
 
-# Or let the script find itself
-scripts/worktree-create.sh ${BRANCH_TYPE:-"feature"} ${BRANCH_NAME}
+# Frontend only
+.claude/scripts/worktree-create.sh "${BRANCH_TYPE:-feature}" "${BRANCH_NAME}" --frontend-only
+
+# Backend only
+.claude/scripts/worktree-create.sh "${BRANCH_TYPE:-feature}" "${BRANCH_NAME}" --backend-only
+
+# Backend + Database
+.claude/scripts/worktree-create.sh "${BRANCH_TYPE:-feature}" "${BRANCH_NAME}" --backend --db
 ```
 
-The script is pre-approved in settings.local.json and will run without bash command approvals.
+## What Each Option Sets Up
 
-## What the Script Does
+| Option | Frontend (npm) | Backend (Python) | Database (clone) | Best For |
+|--------|----------------|------------------|------------------|----------|
+| Full | Yes | Yes | Yes | Schema changes, full isolation |
+| Frontend + Backend | Yes | Yes | No (shared) | Most feature work |
+| Frontend only | Yes | No | No | UI/styling changes |
+| Backend only | No | Yes | No | API changes, no DB |
+| Backend + Database | No | Yes | Yes | API + schema changes |
 
-The worktree creation script handles all setup automatically:
+## After Creation
 
-1. **Creates the worktree** in `trees/${BRANCH_NAME}` directory
-2. **Copies environment files** (.env, frontend/.env.local, etc.)
-3. **Copies .claude directory** with all settings and commands (handles submodules properly)
-4. **Installs dependencies** with enhanced multi-directory support:
-   - **Python**: Detects `requirements.txt` in root, backend/, api/, server/, app/, src/
-   - **Node.js**: Installs from package.json in root or frontend/
-   - **Creates virtual environments** in appropriate subdirectories
-5. **Clones database** for isolated development (PostgreSQL)
-6. **Updates environment variables** to point to branch database
-7. **Provides migration guidance** for the new database
-8. **Verifies environment setup** and provides troubleshooting guidance
+The script will:
+1. Create the worktree in `trees/${BRANCH_NAME}`
+2. Copy environment files (.env, credentials, etc.)
+3. Initialize .claude submodule
+4. Run selected setup steps **in parallel** for speed
+5. Copy the `cd` command to your clipboard
 
-## Next Steps
+**Important:** After the worktree is created, you must:
+1. `cd trees/${BRANCH_NAME}` (already copied to clipboard)
+2. Start a new Claude session: `claude`
 
-After creating a worktree:
-
-1. **Start Development**:
-   - Run `/cmd-issue-start` if you have an issue to implement
-   - Or begin writing tests following TDD approach
-
-2. **During Development**:
-   - Write tests first (RED phase)
-   - Implement features (GREEN phase)
-   - Refactor and optimize (REFACTOR phase)
-   - Commit regularly with descriptive messages
-
-3. **Database Migrations**:
-   - Run `alembic upgrade head` (for Python projects)
-   - Run `npm run migrate` (for Node projects)
-   - Test schema changes safely without affecting main database
-
-4. **When Complete**:
-   - Run `/cmd-feature-document` to create spec and update documentation
-   - Merge your changes (PR or local merge)
-   - Run `/cmd-issue-complete` to clean everything up
-
-5. **Virtual Environment Activation**:
-   - **Backend projects**: `cd backend && source venv/bin/activate`
-   - **Root-level Python**: `source venv/bin/activate`
-   - **API projects**: `cd api && source venv/bin/activate`
-   - **Multiple environments**: Each subdirectory with requirements.txt gets its own venv
-
-6. **Troubleshooting Virtual Environment Issues**:
-   ```bash
-   # Check what environments were created
-   ls -la */venv 2>/dev/null || ls -la venv 2>/dev/null
-
-   # If backend venv is missing, create manually:
-   cd backend && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
-
-   # Common activation patterns:
-   cd backend && source venv/bin/activate  # For backend/requirements.txt
-   source venv/bin/activate                # For root requirements.txt
-   ```
-
-7. **Remember**:
-   - This worktree is isolated from other branches
-   - You can switch between worktrees without stashing
-   - Each worktree maintains its own environment and database
-   - Virtual environments are created in the same directory as requirements.txt
-   - Database cleanup happens automatically when branches are merged
-   - ALWAYS create worktrees from the top level directory, not nested within existing worktrees
-
-## Common Project Structures Supported
-
-The script automatically handles these project layouts:
+## Usage Examples
 
 ```
-# Full-stack with backend subdirectory
-project/
-├── backend/requirements.txt → Creates backend/venv/
-├── frontend/package.json    → Runs npm install
-└── .env                     → Copied to worktree
+User: /cmd-worktree-create
+Assistant: What's the branch name?
+User: auth-refactor
+Assistant: What environment do you need?
+  1. Full (frontend + backend + database)
+  2. Frontend + Backend (shared database)
+  3. Frontend only
+  4. Backend only
+  5. Backend + Database
+User: 2
+Assistant: [runs script with --frontend --backend]
+```
 
-# Root-level Python project
-project/
-├── requirements.txt         → Creates venv/
-├── app/                     → Python source code
-└── .env                     → Copied to worktree
+## Cleanup
 
-# Microservices structure
-project/
-├── api/requirements.txt     → Creates api/venv/
-├── server/requirements.txt  → Creates server/venv/
-└── frontend/package.json    → Runs npm install
+When done with a worktree, use `/cmd-issue-complete` or manually:
+```bash
+git worktree remove trees/${BRANCH_NAME}
+git branch -d feature/${BRANCH_NAME}
+# If database was cloned:
+dropdb ${DB_NAME}_${BRANCH_NAME}
 ```
