@@ -35,6 +35,7 @@ BRANCH_NAME=""
 SETUP_FRONTEND=false
 SETUP_BACKEND=false
 SETUP_DB=false
+SETUP_WORKERS=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -48,6 +49,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --db)
             SETUP_DB=true
+            shift
+            ;;
+        --workers)
+            SETUP_WORKERS=true
             shift
             ;;
         --full)
@@ -95,6 +100,7 @@ if [ -z "$BRANCH_NAME" ]; then
     echo "  --frontend      Set up frontend (npm install)"
     echo "  --backend       Set up backend (Python venv + pip)"
     echo "  --db            Clone database for isolation"
+    echo "  --workers       Check Redis and provide Celery worker commands"
     echo "  --frontend-only Frontend only, skip backend/db"
     echo "  --backend-only  Backend only, skip frontend/db"
     echo ""
@@ -102,6 +108,7 @@ if [ -z "$BRANCH_NAME" ]; then
     echo "  ./worktree-create.sh feature my-feature --full"
     echo "  ./worktree-create.sh feature ui-update --frontend-only"
     echo "  ./worktree-create.sh bugfix api-fix --backend --db"
+    echo "  ./worktree-create.sh feature task-queue --backend --workers"
     exit 1
 fi
 
@@ -121,6 +128,7 @@ echo -e "${CYAN}Creating worktree for $BRANCH_TYPE/$BRANCH_NAME...${RESET}"
 echo -e "  Frontend: $([ "$SETUP_FRONTEND" = true ] && echo "yes" || echo "no")"
 echo -e "  Backend:  $([ "$SETUP_BACKEND" = true ] && echo "yes" || echo "no")"
 echo -e "  Database: $([ "$SETUP_DB" = true ] && echo "yes" || echo "no")"
+echo -e "  Workers:  $([ "$SETUP_WORKERS" = true ] && echo "yes" || echo "no")"
 echo ""
 
 # Create trees directory if it doesn't exist
@@ -322,6 +330,67 @@ for pid in "${PIDS[@]}"; do
     wait $pid 2>/dev/null || true
 done
 
+# --- WORKER SETUP (after other setup completes) ---
+WORKER_COMMANDS=""
+if [ "$SETUP_WORKERS" = true ]; then
+    echo -e "${CYAN}Checking worker requirements...${RESET}"
+
+    # Detect if project uses Celery/Redis
+    HAS_CELERY=false
+    CELERY_APP=""
+
+    # Check for celery in requirements
+    for req_file in "requirements.txt" "backend/requirements.txt" "api/requirements.txt"; do
+        if [ -f "$req_file" ] && grep -qi "celery" "$req_file" 2>/dev/null; then
+            HAS_CELERY=true
+            break
+        fi
+    done
+
+    # Find celery app location
+    if [ "$HAS_CELERY" = true ]; then
+        # Common celery app locations
+        for celery_file in "celery.py" "backend/celery.py" "app/celery.py" "*/celery.py"; do
+            found_file=$(find . -name "celery.py" -not -path "*/venv/*" -not -path "*/.git/*" 2>/dev/null | head -1)
+            if [ -n "$found_file" ]; then
+                CELERY_DIR=$(dirname "$found_file")
+                break
+            fi
+        done
+
+        # Check if Redis is running
+        REDIS_RUNNING=false
+        if command -v redis-cli &> /dev/null; then
+            if redis-cli ping &> /dev/null; then
+                REDIS_RUNNING=true
+                echo -e "  ${GREEN}[workers] Redis is running${RESET}"
+            else
+                echo -e "  ${YELLOW}[workers] Redis not running - start with: brew services start redis${RESET}"
+            fi
+        else
+            # Check if CELERY_BROKER_URL uses something other than Redis
+            BROKER_URL=$(grep -E "^CELERY_BROKER_URL=" .env 2>/dev/null | head -1 | cut -d'=' -f2)
+            if [ -n "$BROKER_URL" ]; then
+                echo -e "  ${BLUE}[workers] Broker configured: $BROKER_URL${RESET}"
+            else
+                echo -e "  ${YELLOW}[workers] redis-cli not found, can't verify Redis status${RESET}"
+            fi
+        fi
+
+        # Determine the celery command
+        if [ -n "$CELERY_DIR" ] && [ "$CELERY_DIR" != "." ]; then
+            WORKER_COMMANDS="cd $CELERY_DIR && celery -A celery worker --loglevel=info"
+        else
+            # Try to detect app name from celery.py or common patterns
+            WORKER_COMMANDS="celery -A app worker --loglevel=info"
+        fi
+
+        echo -e "  ${GREEN}[workers] Celery detected${RESET}"
+    else
+        echo -e "  ${YELLOW}[workers] No Celery found in requirements, skipping${RESET}"
+    fi
+fi
+
 # ============================================================================
 # PHASE 4: Summary and next steps
 # ============================================================================
@@ -335,6 +404,14 @@ echo ""
 echo -e "${YELLOW}${BOLD}Next steps:${RESET}"
 echo -e "  1. ${CYAN}cd ${RELATIVE_PATH}${RESET}"
 echo -e "  2. Start a new Claude session: ${CYAN}claude${RESET}"
+
+# Show worker commands if configured
+if [ -n "$WORKER_COMMANDS" ]; then
+    echo ""
+    echo -e "${YELLOW}${BOLD}To start Celery workers:${RESET}"
+    echo -e "  ${CYAN}$WORKER_COMMANDS${RESET}"
+    echo -e "  ${CYAN}celery -A app beat --loglevel=info${RESET}  # For scheduled tasks"
+fi
 echo ""
 
 # Copy command to clipboard if pbcopy available

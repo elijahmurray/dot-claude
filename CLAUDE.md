@@ -30,8 +30,9 @@ Every project using this template has:
 - `FEATURES_CHANGELOG.md` - User-facing features and changes
 - `DEV_EXPERIENCE_CHANGELOG.md` - Developer experience improvements
 - `.claude/` - This directory (as a submodule)
-  - `commands/` - Reusable command templates
+  - `commands/` - Reusable command templates (manually invoked)
   - `prompts/` - Generic AI assistance prompts
+  - `skills/` - Agent-invoked behaviors (automatically activated)
   - `scripts/` - Utility scripts
   - `settings.local.json` - Project-specific settings (not tracked in submodule)
 
@@ -129,6 +130,28 @@ The `.claude/commands/` directory contains markdown-based command templates that
 - **PR Workflow**: `cmd-pr-create.md`, `cmd-pr-review.md`, `cmd-pr-finalize.md`, `cmd-pr-implement-feedback.md`
 - **Development**: `cmd-feature-document.md`, `cmd-worktree-create.md`, `cmd-git-cleanup.md`
 - **Tools**: `cmd-mcp-install.md`
+
+### Skills
+Skills are agent-invoked behaviors that activate automatically based on context. Unlike slash commands (which you manually invoke), skills are triggered when the agent recognizes a relevant situation. See `skills/README.md` for details.
+
+**Available Skills:**
+- **pm-linear** - Product management and ticket writing with Linear integration
+- **slack-format** - Format messages for Slack (mrkdwn syntax, not standard Markdown)
+
+**Skills vs Commands:**
+
+| Use | For |
+|-----|-----|
+| `/cmd-*` commands | Explicit, one-off workflows you trigger manually |
+| Skills | Repeat workflows the agent recognizes and applies automatically |
+
+**pm-linear skill activates when you:**
+- Ask to write, create, or draft a ticket/issue/story
+- Want to triage or categorize bugs
+- Discuss prioritization or backlog management
+- Reference Linear or ticket management
+
+**Requires:** Linear MCP server configured (see `skills/pm-linear/skill.md`)
 
 ### Notification System
 The repository includes a notification script (`scripts/notify-agent-complete.sh`) that sends desktop notifications for:

@@ -2,6 +2,74 @@
 
 This file tracks improvements to the development workflow, tooling, and developer experience for projects using the dot-claude template.
 
+## [1.8.0] - 2025-12-30
+
+### Added
+- **Skills Support**: New agent-invoked behavior pattern that activates automatically based on context
+  - Skills complement commands (manual) with automatic pattern recognition
+  - Progressive disclosure: cookbook files only loaded when relevant
+  - Created `skills/README.md` explaining skills vs commands vs prompts
+
+- **PM/Linear Skill**: Product management and ticket writing with Linear integration
+  - `skill.md` - Activation triggers and workflow definition
+  - `prompts/write-ticket.md` - Draft well-structured tickets
+  - `prompts/triage-bug.md` - Categorize and prioritize bugs
+  - `prompts/update-ticket.md` - Modify existing tickets
+  - `prompts/batch-review.md` - Review multiple tickets at once
+  - `prompts/sync-workspace.md` - Fetch and cache Linear workspace metadata
+  - `cookbook/ticket-templates.md` - Bug, feature, chore, improvement templates
+  - `cookbook/pm-style-guide.md` - Writing conventions and priority guidelines
+  - `cookbook/linear-patterns.md` - Branch naming, commits, PR linking
+  - `cookbook/workspace-config.md` - Local cache format and sync behavior
+
+- **Workspace Config Sync**: Automatic sync of Linear workspace metadata
+  - Fetches labels, teams, projects, workflow states, members
+  - Caches to `.claude/linear-workspace.json` (gitignored)
+  - Auto-prompts when config missing or >7 days stale
+  - Uses actual workspace labels instead of generic suggestions
+
+- **Roadmap & Project Management**: Full project lifecycle support
+  - `prompts/manage-project.md` - Create, update, change status of projects
+  - `prompts/roadmap-review.md` - Review roadmap health, identify at-risk projects
+  - `prompts/plan-initiative.md` - Break initiatives into projects + milestones + tickets
+  - `cookbook/roadmap-patterns.md` - Best practices for roadmap management
+
+- **Ticket-Linked Branch Creation**: Enforced branch naming convention
+  - `prompts/start-work.md` - Create ticket-linked branches automatically
+  - Branch format: `{type}/{TICKET_ID}-{description}` (e.g., `feature/RAI-270-add-auth`)
+  - Ensures Linear auto-links branches, commits, and PRs
+  - Updated `cmd-worktree-create.md` to require ticket ID
+  - Enhanced `cookbook/linear-patterns.md` with detailed naming rules
+
+- **Priority and Dependency Handling**: Full support for ticket relationships
+  - Priority levels: urgent, high, medium, low with usage guidelines
+  - Dependency mapping: blocks/blocked-by relationships
+  - `write-ticket.md` now includes priority and dependency fields
+  - `plan-initiative.md` includes dependency graph visualization
+  - Proper creation order when batch-creating linked tickets
+
+- **Linear MCP Server Config**: Added to `settings.local.json.example`
+  - Pre-configured MCP server for Linear integration
+  - Works with pm-linear skill for actual ticket creation
+
+- **Slack Format Skill**: Format messages for Slack's mrkdwn syntax
+  - `skills/slack-format/` - New skill directory
+  - Handles Slack's non-standard markdown (mrkdwn)
+  - Templates for status updates, announcements, alerts, summaries
+  - Full mrkdwn reference in cookbook
+  - Copy-paste ready output format
+
+### Enhanced
+- **File Protection**: Extended deny rules to protect `skills/` directory
+  - Added Write/Edit/MultiEdit deny patterns
+  - Added Bash deny patterns (rm, mv, cp)
+  - Added Read allow patterns for skills access
+
+- **CLAUDE.md**: Added Skills section under Architecture
+  - Explains skills vs commands distinction
+  - Documents pm-linear skill activation triggers
+  - Updated Project Structure to include skills/
+
 ## [1.7.0] - 2025-09-17
 
 ### Enhanced
