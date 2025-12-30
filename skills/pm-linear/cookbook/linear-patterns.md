@@ -1,10 +1,41 @@
 # Linear Patterns
 
 ## Branch Naming
-Linear auto-links branches that include the issue ID:
-- `feature/ENG-123-add-dark-mode`
-- `fix/ENG-456-login-timeout`
-- `chore/ENG-789-update-deps`
+
+**IMPORTANT:** Every branch MUST include the ticket ID for auto-linking.
+
+### Format
+```
+{type}/{TICKET_ID}-{description}
+```
+
+### Types
+| Ticket Type | Branch Prefix |
+|-------------|---------------|
+| Feature | `feature/` |
+| Bug | `fix/` |
+| Chore | `chore/` |
+| Improvement | `chore/` or `feature/` |
+| Hotfix (urgent) | `hotfix/` |
+
+### Examples
+- `feature/RAI-270-add-user-authentication`
+- `fix/RAI-271-login-timeout-error`
+- `chore/RAI-272-update-dependencies`
+- `hotfix/RAI-273-security-patch`
+
+### Rules
+1. **Always include ticket ID** - This is how Linear auto-links
+2. **Lowercase with hyphens** - No spaces, underscores, or caps
+3. **Keep description short** - 3-5 words max
+4. **Match type to ticket** - Bug tickets get `fix/`, features get `feature/`
+
+### What Linear Auto-Links
+When your branch contains `RAI-270` (or your team's prefix):
+- Branch appears on the ticket in Linear
+- Commits to that branch are linked
+- PRs from that branch are linked
+- Merging can auto-close the ticket
 
 ## Commit Messages
 Include issue ID to auto-link:

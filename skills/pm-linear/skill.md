@@ -13,6 +13,8 @@ Activate this skill when the user:
 - Wants to create or manage projects/roadmap items
 - Asks to review roadmap health or status
 - Wants to plan an initiative or break down a large feature
+- Wants to start working on something (create ticket-linked branch)
+- Asks to create a branch or start development
 
 ## Prerequisites
 - Linear MCP server must be configured
@@ -90,6 +92,13 @@ See `cookbook/workspace-config.md` for details.
 3. Draft full plan for review
 4. Create project and tickets in Linear if approved
 
+### For Starting Work (Ticket-Linked Branches)
+1. Read `prompts/start-work.md`
+2. Ensure ticket exists (create via write-ticket if needed)
+3. Generate branch name: `{type}/{TICKET_ID}-{description}`
+4. Create branch or worktree
+5. Confirm setup with next steps
+
 ## Cookbook (Progressive Disclosure)
 Only read these when relevant:
 - User asks about templates → `cookbook/ticket-templates.md`
@@ -135,6 +144,12 @@ To clear cached auth: `rm -rf ~/.mcp-auth`
 - "what projects are at risk?" → activates roadmap-review with filter
 - "let's plan out the mobile app launch" → activates plan-initiative
 - "break this feature into a project with tickets" → activates plan-initiative
+
+### Starting Work
+- "let's start working on RAI-270" → activates start-work, creates branch
+- "create a branch for the auth feature" → creates ticket first, then branch
+- "start implementing the login fix" → activates start-work workflow
+- "I want to work on adding dark mode" → creates ticket + branch together
 
 ### Workspace
 - "sync linear workspace" → refreshes workspace config

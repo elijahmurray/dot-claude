@@ -3,25 +3,44 @@
 Create a new Git worktree for parallel feature development.
 
 ## Variables
-- BRANCH_TYPE: The type (feature, bugfix, hotfix)
-- BRANCH_NAME: The name of your feature
+- TICKET_ID: The Linear ticket ID (e.g., RAI-270) - **REQUIRED**
+- BRANCH_TYPE: The type (feature, fix, chore, hotfix) - default: feature
+- DESCRIPTION: Short description (will be slugified)
+
+## Branch Naming Convention
+
+**Format:** `{type}/{TICKET_ID}-{description}`
+
+**Examples:**
+- `feature/RAI-270-add-user-auth`
+- `fix/RAI-271-login-timeout`
+- `chore/RAI-272-update-deps`
+
+**IMPORTANT:** Always include the ticket ID so Linear auto-links the branch.
 
 ## Instructions
 
-Run the automated worktree setup script. The script will automatically detect the correct path regardless of your current directory:
+Run the automated worktree setup script with ticket-linked branch name:
 
 ```bash
-# From project root
-.claude/scripts/worktree-create.sh ${BRANCH_TYPE:-"feature"} ${BRANCH_NAME}
+# Recommended format (ticket-linked)
+.claude/scripts/worktree-create.sh feature RAI-270-add-user-auth
 
 # From any subdirectory
-../scripts/worktree-create.sh ${BRANCH_TYPE:-"feature"} ${BRANCH_NAME}
+../scripts/worktree-create.sh feature RAI-270-add-user-auth
 
 # Or let the script find itself
-scripts/worktree-create.sh ${BRANCH_TYPE:-"feature"} ${BRANCH_NAME}
+scripts/worktree-create.sh feature RAI-270-add-user-auth
 ```
 
 The script is pre-approved in settings.local.json and will run without bash command approvals.
+
+## Before Creating a Worktree
+
+1. **Ensure you have a ticket** - Create one in Linear first if needed
+2. **Get the ticket ID** - e.g., RAI-270, ENG-123
+3. **Determine the type** - feature, fix, chore, or hotfix
+4. **Create short description** - 3-5 words, lowercase, hyphens
 
 ## What the Script Does
 

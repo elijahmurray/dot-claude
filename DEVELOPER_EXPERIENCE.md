@@ -34,6 +34,13 @@ This file tracks improvements to the development workflow, tooling, and develope
   - `prompts/plan-initiative.md` - Break initiatives into projects + milestones + tickets
   - `cookbook/roadmap-patterns.md` - Best practices for roadmap management
 
+- **Ticket-Linked Branch Creation**: Enforced branch naming convention
+  - `prompts/start-work.md` - Create ticket-linked branches automatically
+  - Branch format: `{type}/{TICKET_ID}-{description}` (e.g., `feature/RAI-270-add-auth`)
+  - Ensures Linear auto-links branches, commits, and PRs
+  - Updated `cmd-worktree-create.md` to require ticket ID
+  - Enhanced `cookbook/linear-patterns.md` with detailed naming rules
+
 - **Linear MCP Server Config**: Added to `settings.local.json.example`
   - Pre-configured MCP server for Linear integration
   - Works with pm-linear skill for actual ticket creation
