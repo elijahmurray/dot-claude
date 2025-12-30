@@ -10,27 +10,38 @@ Draft a well-structured ticket for Linear based on context and conversation.
 
 ## Workflow
 
-1. **Gather Context**
+1. **Check Workspace Config**
+   - Look for `.claude/linear-workspace.json`
+   - If missing or >7 days old, run `prompts/sync-workspace.md` first
+   - Load available labels, teams, projects for suggestions
+
+2. **Gather Context**
    - Review recent conversation for requirements
    - If referencing code, read relevant files
    - Identify the core problem or feature request
 
-2. **Select Template**
+3. **Select Template**
    - Read `cookbook/ticket-templates.md`
    - Choose appropriate template for $TICKET_TYPE
 
-3. **Draft Ticket**
+4. **Draft Ticket**
    - Title: Clear, actionable, starts with verb
    - Description: Problem/goal, acceptance criteria, context
    - Follow `cookbook/pm-style-guide.md` conventions
 
-4. **Review with User**
+5. **Suggest Labels & Project**
+   - Use labels from workspace config (not generic ones)
+   - Suggest appropriate team based on context
+   - Recommend project if one fits
+
+6. **Review with User**
    - Present draft for feedback
+   - Show suggested labels/team/project
    - Iterate if needed
 
-5. **Create in Linear**
+7. **Create in Linear**
    - Use Linear MCP to create issue
-   - Apply appropriate labels and priority
+   - Apply chosen labels, team, project, priority
    - Link to relevant resources
 
 ## Output Format

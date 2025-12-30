@@ -16,9 +16,17 @@ This file tracks improvements to the development workflow, tooling, and develope
   - `prompts/triage-bug.md` - Categorize and prioritize bugs
   - `prompts/update-ticket.md` - Modify existing tickets
   - `prompts/batch-review.md` - Review multiple tickets at once
+  - `prompts/sync-workspace.md` - Fetch and cache Linear workspace metadata
   - `cookbook/ticket-templates.md` - Bug, feature, chore, improvement templates
   - `cookbook/pm-style-guide.md` - Writing conventions and priority guidelines
   - `cookbook/linear-patterns.md` - Branch naming, commits, PR linking
+  - `cookbook/workspace-config.md` - Local cache format and sync behavior
+
+- **Workspace Config Sync**: Automatic sync of Linear workspace metadata
+  - Fetches labels, teams, projects, workflow states, members
+  - Caches to `.claude/linear-workspace.json` (gitignored)
+  - Auto-prompts when config missing or >7 days stale
+  - Uses actual workspace labels instead of generic suggestions
 
 - **Linear MCP Server Config**: Added to `settings.local.json.example`
   - Pre-configured MCP server for Linear integration

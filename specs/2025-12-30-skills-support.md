@@ -76,6 +76,14 @@ skills/
 - Skills could be enabled/disabled per project via configuration
 - Cross-skill composition for complex workflows
 
+## Workspace Config Enhancement (added)
+
+The pm-linear skill now includes workspace config sync:
+- Auto-fetches labels, teams, projects, states from Linear
+- Caches to `.claude/linear-workspace.json`
+- Auto-refreshes weekly or on-demand
+- Uses actual workspace labels instead of generic suggestions
+
 ## Implementation Notes
 
 Skills differ from commands in invocation:
