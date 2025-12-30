@@ -56,11 +56,49 @@ Break down a large initiative into a project with milestones and individual tick
    - Clear title (verb + noun)
    - Brief description
    - Type (feature, chore, bug fix)
+   - **Priority** (urgent/high/medium/low)
    - Rough size (small/medium/large)
-   - Dependencies on other tickets
    - Milestone assignment
 
-5. **Review Plan**
+5. **Map Dependencies**
+
+   Identify blocking relationships:
+   ```
+   ## Dependency Map
+
+   [Ticket A: Set up database schema]
+        ↓ blocks
+   [Ticket B: Create API endpoints]
+        ↓ blocks
+   [Ticket C: Build frontend forms]
+
+   [Ticket D: Configure auth] ←──┐
+        ↓ blocks                 │
+   [Ticket E: Add login flow] ───┘ (D and A both block E)
+   ```
+
+   For each ticket, determine:
+   - **Blocked by**: What MUST be done first?
+   - **Blocks**: What can't start until this is done?
+
+   Common patterns:
+   - Schema → API → Frontend (data flows up)
+   - Auth setup → Everything that needs auth
+   - Config/infra → Features that use it
+
+6. **Set Priorities**
+
+   Assign priority to each ticket:
+   - **High**: Critical path, blocks many others, must be done first
+   - **Medium**: Important but has flexibility in timing
+   - **Low**: Can be done later, nice-to-have
+
+   Priority factors:
+   - How many tickets does this block?
+   - Is it on the critical path to launch?
+   - Can work proceed in parallel without it?
+
+7. **Review Plan**
 
    Present for approval:
    ```
@@ -79,16 +117,22 @@ Break down a large initiative into a project with milestones and individual tick
    ### Tickets to Create
 
    **Milestone 1: [Name]**
-   - [ ] [Ticket title] (feature, medium)
-   - [ ] [Ticket title] (chore, small)
+   | Ticket | Type | Priority | Blocked By | Blocks |
+   |--------|------|----------|------------|--------|
+   | Set up database schema | chore | high | - | API endpoints |
+   | Create API endpoints | feature | high | Schema | Frontend |
 
    **Milestone 2: [Name]**
-   - [ ] [Ticket title] (feature, large)
+   | Ticket | Type | Priority | Blocked By | Blocks |
+   |--------|------|----------|------------|--------|
+   | Build frontend forms | feature | medium | API | - |
    ...
 
-   ### Dependencies
-   - Ticket X blocks Ticket Y
-   - External: [Any external dependencies]
+   ### Dependency Graph
+   ```
+   Schema (high) → API (high) → Frontend (medium)
+   Auth (high) → Login flow (medium)
+   ```
 
    ### Risks
    - [Potential risk and mitigation]
@@ -97,13 +141,14 @@ Break down a large initiative into a project with milestones and individual tick
    Create this plan in Linear? (yes/no/edit)
    ```
 
-6. **Create in Linear**
+8. **Create in Linear**
 
-   If approved:
-   - Create project first
-   - Create tickets with project link
-   - Set up dependencies
-   - Add milestone labels or sub-projects
+   If approved, create in this order:
+   1. Create project first
+   2. Create tickets WITHOUT dependencies (to get IDs)
+   3. Update tickets to add dependency links
+   4. Verify dependency chain is correct
+   5. Add milestone labels or sub-projects
 
 ## Planning Tips
 
