@@ -2,6 +2,39 @@
 
 This file tracks improvements to the development workflow, tooling, and developer experience for projects using the dot-claude template.
 
+## [1.8.0] - 2025-12-30
+
+### Added
+- **Skills Support**: New agent-invoked behavior pattern that activates automatically based on context
+  - Skills complement commands (manual) with automatic pattern recognition
+  - Progressive disclosure: cookbook files only loaded when relevant
+  - Created `skills/README.md` explaining skills vs commands vs prompts
+
+- **PM/Linear Skill**: Product management and ticket writing with Linear integration
+  - `skill.md` - Activation triggers and workflow definition
+  - `prompts/write-ticket.md` - Draft well-structured tickets
+  - `prompts/triage-bug.md` - Categorize and prioritize bugs
+  - `prompts/update-ticket.md` - Modify existing tickets
+  - `prompts/batch-review.md` - Review multiple tickets at once
+  - `cookbook/ticket-templates.md` - Bug, feature, chore, improvement templates
+  - `cookbook/pm-style-guide.md` - Writing conventions and priority guidelines
+  - `cookbook/linear-patterns.md` - Branch naming, commits, PR linking
+
+- **Linear MCP Server Config**: Added to `settings.local.json.example`
+  - Pre-configured MCP server for Linear integration
+  - Works with pm-linear skill for actual ticket creation
+
+### Enhanced
+- **File Protection**: Extended deny rules to protect `skills/` directory
+  - Added Write/Edit/MultiEdit deny patterns
+  - Added Bash deny patterns (rm, mv, cp)
+  - Added Read allow patterns for skills access
+
+- **CLAUDE.md**: Added Skills section under Architecture
+  - Explains skills vs commands distinction
+  - Documents pm-linear skill activation triggers
+  - Updated Project Structure to include skills/
+
 ## [1.7.0] - 2025-09-17
 
 ### Enhanced

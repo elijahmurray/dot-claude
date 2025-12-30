@@ -15,6 +15,7 @@
       "Read(**/.env.*)",
       "Write(.claude/commands/**)",
       "Write(.claude/prompts/**)",
+      "Write(.claude/skills/**)",
       "Write(.claude/scripts/**)",
       "Write(.claude/CLAUDE.md)",
       "Write(.claude/*.md)",
@@ -27,6 +28,7 @@
       "Write(**/.env.*)",
       "Edit(.claude/commands/**)",
       "Edit(.claude/prompts/**)",
+      "Edit(.claude/skills/**)",
       "Edit(.claude/scripts/**)",
       "Edit(.claude/CLAUDE.md)",
       "Edit(.claude/*.md)",
@@ -39,6 +41,7 @@
       "Edit(**/.env.*)",
       "MultiEdit(.claude/commands/**)",
       "MultiEdit(.claude/prompts/**)",
+      "MultiEdit(.claude/skills/**)",
       "MultiEdit(.claude/scripts/**)",
       "MultiEdit(.claude/CLAUDE.md)",
       "MultiEdit(.claude/*.md)",
@@ -54,15 +57,18 @@
       "Bash(git rm *settings.local.json*)",
       "Bash(rm .claude/commands/*)",
       "Bash(rm .claude/prompts/*)",
+      "Bash(rm .claude/skills/*)",
       "Bash(rm .claude/scripts/*)",
       "Bash(rm .claude/*.md)",
       "Bash(rm -rf .claude*)",
       "Bash(git rm .claude/*)",
       "Bash(mv .claude/commands/*)",
       "Bash(mv .claude/prompts/*)",
+      "Bash(mv .claude/skills/*)",
       "Bash(mv .claude/scripts/*)",
       "Bash(cp * .claude/commands/*)",
       "Bash(cp * .claude/prompts/*)",
+      "Bash(cp * .claude/skills/*)",
       "Bash(cp * .claude/scripts/*)",
       "Bash(echo * > .claude/*)",
       "Bash(echo * >> .claude/*)",
@@ -88,6 +94,8 @@
     "allow": [
       "Read(.claude/settings.local.json)",
       "Read(*/.claude/settings.local.json)",
+      "Read(.claude/skills/**)",
+      "Read(skills/**)",
       "Edit(.claude/settings.local.json)",
       "Edit(*/.claude/settings.local.json)",
       "Write(.claude/settings.local.json)",
@@ -250,5 +258,11 @@
         ]
       }
     ]
+  },
+  "mcpServers": {
+    "linear": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.linear.app/mcp"]
+    }
   }
 }

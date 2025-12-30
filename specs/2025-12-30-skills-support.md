@@ -1,40 +1,85 @@
-# skills-support Feature Specification
+# Skills Support Feature Specification
 
-**Date**: 2025-12-30  
-**Feature**: skills-support  
-**Status**: In Progress  
+**Date**: 2025-12-30
+**Feature**: skills-support
+**Status**: Complete
 
 ## Overview
 
-[Brief description of what was built]
+Added Skills support to the dot-claude template. Skills are agent-invoked behaviors that activate automatically based on context, complementing the existing manual slash commands. The first skill implemented is `pm-linear` for product management and ticket writing workflows with Linear integration.
 
 ## User Requirements
 
-[All user inputs and requests from the session]
+- Add Skills pattern to support agent-invoked (automatic) behaviors
+- Create a PM/Linear skill for ticket writing, bug triage, and backlog management
+- Skills should use progressive disclosure (cookbook files only loaded when relevant)
+- Preserve all existing commands/prompts/scripts functionality
 
 ## Technical Specifications
 
 ### Implementation Details
-[Implementation requirements and architecture decisions]
 
-### Files Modified/Created
-[List of all changed files]
+Skills follow a structured pattern:
+- `skill.md` - Main file defining activation triggers, variables, and workflow
+- `prompts/` - Individual prompt templates for specific tasks
+- `cookbook/` - Reference docs loaded conditionally (progressive disclosure)
+
+The pm-linear skill activates when users:
+- Ask to write, create, or draft tickets/issues/stories
+- Want to triage or categorize bugs
+- Discuss prioritization or backlog management
+- Reference Linear or ticket management
+
+### Files Created
+
+```
+skills/
+├── README.md                              # Skills vs commands explanation
+└── pm-linear/
+    ├── skill.md                           # PM workflow definition
+    ├── prompts/
+    │   ├── write-ticket.md                # Draft new tickets
+    │   ├── triage-bug.md                  # Categorize bugs
+    │   ├── update-ticket.md               # Modify tickets
+    │   └── batch-review.md                # Review multiple tickets
+    └── cookbook/
+        ├── ticket-templates.md            # Bug/feature/chore templates
+        ├── pm-style-guide.md              # Writing conventions
+        └── linear-patterns.md             # Linear workflows
+```
+
+### Files Modified
+
+- `CLAUDE.md` - Added Skills section under Architecture, updated Project Structure
+- `settings.local.json.example` - Added protection rules and Linear MCP config
 
 ### Key Decisions Made
-[Important technical or design decisions]
+
+1. **Skills complement commands, don't replace them** - Commands for explicit one-off workflows, skills for repeat patterns
+2. **Progressive disclosure** - Cookbook files only read when relevant to reduce context usage
+3. **Linear MCP integration** - Skills designed to work with Linear MCP server for actual ticket creation
+4. **Protection rules** - Skills files protected from modification like other .claude files, but readable
 
 ## Testing Requirements
 
-[Testing specifications mentioned]
+- Test skill activation with prompts like "write a ticket for the auth bug"
+- Verify Linear MCP server configuration works when enabled
+- Ensure existing commands/scripts continue to function
 
 ## Dependencies
 
-[External libraries, APIs, or services used]
+- Linear MCP server (optional, for actual ticket creation): `npx -y @linear/mcp-server`
 
 ## Future Considerations
 
-[Any mentioned enhancements]
+- Additional skills could be added (e.g., code-review, deployment, testing)
+- Skills could be enabled/disabled per project via configuration
+- Cross-skill composition for complex workflows
 
 ## Implementation Notes
 
-[Key details needed to recreate the work]
+Skills differ from commands in invocation:
+- Commands: User types `/cmd-*` to explicitly trigger
+- Skills: Agent recognizes context and applies automatically
+
+The pm-linear skill includes comprehensive templates for bugs, features, chores, and improvements, plus style guides for consistent ticket writing.
