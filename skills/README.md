@@ -27,3 +27,4 @@ Each skill has:
 ## Available Skills
 
 - **pm-linear** - Product management and ticket writing with Linear integration
+- **slack-format** - Format messages for Slack using mrkdwn syntax (not standard Markdown)

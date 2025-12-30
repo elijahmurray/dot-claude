@@ -136,6 +136,7 @@ Skills are agent-invoked behaviors that activate automatically based on context.
 
 **Available Skills:**
 - **pm-linear** - Product management and ticket writing with Linear integration
+- **slack-format** - Format messages for Slack (mrkdwn syntax, not standard Markdown)
 
 **Skills vs Commands:**
 

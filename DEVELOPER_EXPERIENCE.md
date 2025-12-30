@@ -52,6 +52,13 @@ This file tracks improvements to the development workflow, tooling, and develope
   - Pre-configured MCP server for Linear integration
   - Works with pm-linear skill for actual ticket creation
 
+- **Slack Format Skill**: Format messages for Slack's mrkdwn syntax
+  - `skills/slack-format/` - New skill directory
+  - Handles Slack's non-standard markdown (mrkdwn)
+  - Templates for status updates, announcements, alerts, summaries
+  - Full mrkdwn reference in cookbook
+  - Copy-paste ready output format
+
 ### Enhanced
 - **File Protection**: Extended deny rules to protect `skills/` directory
   - Added Write/Edit/MultiEdit deny patterns
