@@ -192,12 +192,25 @@ echo "   - Common issues and solutions"
 echo "   - New essential commands"
 echo "   - New troubleshooting steps"
 
+# 5b. Check if skills need updates
+echo ""
+echo "🔍 Checking if skills need updates..."
+if [ -d ".claude/skills" ] || [ -d "skills" ]; then
+    echo "   Skills directory found. Review if changes affect:"
+    echo "   - pm-linear skill (ticket workflows, roadmap management)"
+    echo "   - Workspace config sync"
+    echo "   - Branch naming conventions"
+    echo "   - Any new patterns that should be documented in cookbooks"
+else
+    echo "   No skills directory found (optional)"
+fi
+
 # 6. Commit Documentation (dry run first)
 echo ""
 echo "📦 Checking for documentation changes to commit..."
 
 # Check what documentation files exist and might need staging
-DOC_FILES="specs/ FEATURES.md CHANGELOG.md DEVELOPER_EXPERIENCE.md README.md CLAUDE.md"
+DOC_FILES="specs/ FEATURES.md CHANGELOG.md DEVELOPER_EXPERIENCE.md README.md CLAUDE.md skills/ .claude/skills/"
 EXISTING_DOC_FILES=""
 
 for file in $DOC_FILES; do
@@ -243,12 +256,14 @@ else
 fi
 echo "🔍 README.md reviewed - manual updates may be needed"
 echo "🔍 CLAUDE.md reviewed - manual updates may be needed"
+echo "🔍 Skills reviewed - update if new patterns added"
 echo ""
 echo "🎯 Next steps:"
 echo "1. Review and complete the specification: $SPEC_FILE"
 echo "2. Add changelog entry to: $TARGET_CHANGELOG"
 echo "3. Update README.md and CLAUDE.md if needed"
-echo "4. Run /cmd-pr-create to create a pull request"
-echo "5. The PR will include all documentation"
+echo "4. Update skills/ if new workflows or patterns were added"
+echo "5. Run /cmd-pr-create to create a pull request"
+echo "6. The PR will include all documentation"
 echo ""
 echo "✨ Feature documentation workflow complete!"
