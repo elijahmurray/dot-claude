@@ -92,6 +92,22 @@ Full project lifecycle and roadmap management:
 - `prompts/plan-initiative.md` - Break initiatives into projects + milestones + tickets
 - `cookbook/roadmap-patterns.md` - Best practices for roadmap management
 
+## Priority and Dependency Handling (added)
+
+Full support for ticket relationships:
+- Priority levels: urgent, high, medium, low
+- Priority guidelines based on user impact, business urgency, dependencies
+- Dependency mapping: blocks/blocked-by relationships
+- Dependency graph visualization for initiatives
+- Proper creation order when batch-creating linked tickets
+
+## Ticket-Linked Branches (added)
+
+Branch naming convention enforcement:
+- `prompts/start-work.md` - Create ticket-linked branches
+- Format: `{type}/{TICKET_ID}-{description}`
+- Linear auto-links branches, commits, and PRs
+
 ## Implementation Notes
 
 Skills differ from commands in invocation:

@@ -41,6 +41,13 @@ This file tracks improvements to the development workflow, tooling, and develope
   - Updated `cmd-worktree-create.md` to require ticket ID
   - Enhanced `cookbook/linear-patterns.md` with detailed naming rules
 
+- **Priority and Dependency Handling**: Full support for ticket relationships
+  - Priority levels: urgent, high, medium, low with usage guidelines
+  - Dependency mapping: blocks/blocked-by relationships
+  - `write-ticket.md` now includes priority and dependency fields
+  - `plan-initiative.md` includes dependency graph visualization
+  - Proper creation order when batch-creating linked tickets
+
 - **Linear MCP Server Config**: Added to `settings.local.json.example`
   - Pre-configured MCP server for Linear integration
   - Works with pm-linear skill for actual ticket creation
