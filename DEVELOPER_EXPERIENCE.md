@@ -28,6 +28,12 @@ This file tracks improvements to the development workflow, tooling, and develope
   - Auto-prompts when config missing or >7 days stale
   - Uses actual workspace labels instead of generic suggestions
 
+- **Roadmap & Project Management**: Full project lifecycle support
+  - `prompts/manage-project.md` - Create, update, change status of projects
+  - `prompts/roadmap-review.md` - Review roadmap health, identify at-risk projects
+  - `prompts/plan-initiative.md` - Break initiatives into projects + milestones + tickets
+  - `cookbook/roadmap-patterns.md` - Best practices for roadmap management
+
 - **Linear MCP Server Config**: Added to `settings.local.json.example`
   - Pre-configured MCP server for Linear integration
   - Works with pm-linear skill for actual ticket creation

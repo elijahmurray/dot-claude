@@ -10,6 +10,9 @@ Activate this skill when the user:
 - Discusses prioritization or backlog management
 - References Linear or ticket management
 - Asks for help with product specs or requirements
+- Wants to create or manage projects/roadmap items
+- Asks to review roadmap health or status
+- Wants to plan an initiative or break down a large feature
 
 ## Prerequisites
 - Linear MCP server must be configured
@@ -69,12 +72,31 @@ See `cookbook/workspace-config.md` for details.
 3. Save to `.claude/linear-workspace.json`
 4. Confirm what was synced
 
+### For Managing Projects (Roadmap)
+1. Read `prompts/manage-project.md`
+2. Create, update, or change status of projects
+3. Link issues to projects
+4. Set target dates and milestones
+
+### For Roadmap Review
+1. Read `prompts/roadmap-review.md`
+2. Query all active projects from Linear MCP
+3. Analyze health (on track, at risk, blocked)
+4. Present summary with recommendations
+
+### For Planning Initiatives
+1. Read `prompts/plan-initiative.md`
+2. Break down initiative into project + milestones + tickets
+3. Draft full plan for review
+4. Create project and tickets in Linear if approved
+
 ## Cookbook (Progressive Disclosure)
 Only read these when relevant:
 - User asks about templates → `cookbook/ticket-templates.md`
 - User asks about style → `cookbook/pm-style-guide.md`
 - User asks about Linear specifics → `cookbook/linear-patterns.md`
 - User asks about workspace config → `cookbook/workspace-config.md`
+- User asks about roadmaps/projects → `cookbook/roadmap-patterns.md`
 
 ## Integration
 This skill composes with the Linear MCP server. Ensure MCP is configured:
@@ -100,9 +122,20 @@ Authentication uses OAuth 2.1 - you'll be prompted to authorize on first use.
 To clear cached auth: `rm -rf ~/.mcp-auth`
 
 ## Examples
+
+### Tickets
 - "write a ticket for the auth bug we discussed" → activates write-ticket with bug template
 - "help me triage these 5 issues" → activates batch-review
 - "create a feature ticket for dark mode" → activates write-ticket with feature template
 - "what's the priority for this?" → activates triage workflow
+
+### Roadmap & Projects
+- "create a project for Q1 auth improvements" → activates manage-project
+- "how's the roadmap looking?" → activates roadmap-review
+- "what projects are at risk?" → activates roadmap-review with filter
+- "let's plan out the mobile app launch" → activates plan-initiative
+- "break this feature into a project with tickets" → activates plan-initiative
+
+### Workspace
 - "sync linear workspace" → refreshes workspace config
 - "refresh linear labels" → triggers workspace sync

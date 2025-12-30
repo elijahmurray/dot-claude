@@ -84,6 +84,14 @@ The pm-linear skill now includes workspace config sync:
 - Auto-refreshes weekly or on-demand
 - Uses actual workspace labels instead of generic suggestions
 
+## Roadmap Management Enhancement (added)
+
+Full project lifecycle and roadmap management:
+- `prompts/manage-project.md` - Create, update, change project status
+- `prompts/roadmap-review.md` - Review roadmap health, identify at-risk projects
+- `prompts/plan-initiative.md` - Break initiatives into projects + milestones + tickets
+- `cookbook/roadmap-patterns.md` - Best practices for roadmap management
+
 ## Implementation Notes
 
 Skills differ from commands in invocation:
