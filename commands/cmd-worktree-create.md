@@ -1,11 +1,12 @@
-# worktree-create.md
+# Create Worktree
 
-Create a new Git worktree for parallel feature development.
+Create a new Git worktree for isolated feature development.
 
 ## Variables
 - TICKET_ID: The Linear ticket ID (e.g., RAI-270) - **REQUIRED**
 - BRANCH_TYPE: The type (feature, fix, chore, hotfix) - default: feature
 - DESCRIPTION: Short description (will be slugified)
+- SETUP_TYPE: What to set up - full, frontend-backend, frontend-only, backend-only, backend-db
 
 ## Branch Naming Convention
 
@@ -20,115 +21,118 @@ Create a new Git worktree for parallel feature development.
 
 ## Instructions
 
-Run the automated worktree setup script with ticket-linked branch name:
+### Step 1: Get Branch Info
+Ask the user for:
+1. **Ticket ID** (required) - e.g., RAI-270
+2. **Branch type** - feature, fix, chore, hotfix (default: feature)
+3. **Short description** - 3-5 words for the branch name
+
+### Step 2: Ask What Setup They Need
+
+**What environment do you need for this work?**
+
+1. **Full** (frontend + backend + database clone) - Complete isolation, use when changing DB schema
+2. **Frontend + Backend** (no database clone) - Use shared dev database, fastest for most work
+3. **Frontend only** - Just npm install, for pure UI work
+4. **Backend only** - Just Python venv, for API-only changes
+5. **Backend + Database** - Python + isolated database, for backend + schema changes
+
+### Step 3: Check for Workers (if backend selected)
+
+If the project has Celery/Redis workers (check for `celery.py`, `tasks.py`, or `worker` in the codebase), ask:
+
+**Do you need background workers for this work?**
+- Yes - I'll be working with async tasks/Celery
+- No - Skip worker setup
+
+### Step 4: Run the Script
+
+Based on choices, run the worktree creation script:
 
 ```bash
-# Recommended format (ticket-linked)
-.claude/scripts/worktree-create.sh feature RAI-270-add-user-auth
+# Full setup (frontend + backend + db)
+.claude/scripts/worktree-create.sh "${BRANCH_TYPE:-feature}" "${TICKET_ID}-${DESCRIPTION}" --full
 
-# From any subdirectory
-../scripts/worktree-create.sh feature RAI-270-add-user-auth
+# Frontend + Backend (no db clone)
+.claude/scripts/worktree-create.sh "${BRANCH_TYPE:-feature}" "${TICKET_ID}-${DESCRIPTION}" --frontend --backend
 
-# Or let the script find itself
-scripts/worktree-create.sh feature RAI-270-add-user-auth
+# Frontend only
+.claude/scripts/worktree-create.sh "${BRANCH_TYPE:-feature}" "${TICKET_ID}-${DESCRIPTION}" --frontend-only
+
+# Backend only
+.claude/scripts/worktree-create.sh "${BRANCH_TYPE:-feature}" "${TICKET_ID}-${DESCRIPTION}" --backend-only
+
+# Backend + Database
+.claude/scripts/worktree-create.sh "${BRANCH_TYPE:-feature}" "${TICKET_ID}-${DESCRIPTION}" --backend --db
+
+# With workers (add to any backend option)
+.claude/scripts/worktree-create.sh "${BRANCH_TYPE:-feature}" "${TICKET_ID}-${DESCRIPTION}" --backend --workers
 ```
 
-The script is pre-approved in settings.local.json and will run without bash command approvals.
+## What Each Option Sets Up
 
-## Before Creating a Worktree
+| Option | Frontend | Backend | Database | Workers | Best For |
+|--------|----------|---------|----------|---------|----------|
+| Full | Yes | Yes | Clone | Optional | Schema changes, full isolation |
+| Frontend + Backend | Yes | Yes | Shared | Optional | Most feature work |
+| Frontend only | Yes | No | No | No | UI/styling changes |
+| Backend only | No | Yes | No | Optional | API changes, no DB |
+| Backend + Database | No | Yes | Clone | Optional | API + schema changes |
 
-1. **Ensure you have a ticket** - Create one in Linear first if needed
-2. **Get the ticket ID** - e.g., RAI-270, ENG-123
-3. **Determine the type** - feature, fix, chore, or hotfix
-4. **Create short description** - 3-5 words, lowercase, hyphens
+## Worker Support
 
-## What the Script Does
+If the project uses Celery/Redis, the `--workers` flag will:
+- Check if Redis is running
+- Provide commands to start Celery worker/beat
+- Note: Workers run against the same database as the worktree
 
-The worktree creation script handles all setup automatically:
+Common worker files to detect:
+- `celery.py` or `**/celery.py`
+- `tasks.py` or `**/tasks.py`
+- `worker/` directory
+- `CELERY_BROKER_URL` in .env
 
-1. **Creates the worktree** in `trees/${BRANCH_NAME}` directory
-2. **Copies environment files** (.env, frontend/.env.local, etc.)
-3. **Copies .claude directory** with all settings and commands (handles submodules properly)
-4. **Installs dependencies** with enhanced multi-directory support:
-   - **Python**: Detects `requirements.txt` in root, backend/, api/, server/, app/, src/
-   - **Node.js**: Installs from package.json in root or frontend/
-   - **Creates virtual environments** in appropriate subdirectories
-5. **Clones database** for isolated development (PostgreSQL)
-6. **Updates environment variables** to point to branch database
-7. **Provides migration guidance** for the new database
-8. **Verifies environment setup** and provides troubleshooting guidance
+## After Creation
 
-## Next Steps
+The script will:
+1. Create the worktree in `trees/${BRANCH_NAME}`
+2. Copy environment files (.env, credentials, etc.)
+3. Initialize .claude submodule
+4. Run selected setup steps **in parallel** for speed
+5. Copy the `cd` command to your clipboard
 
-After creating a worktree:
+**Important:** After the worktree is created, you must:
+1. `cd trees/${BRANCH_NAME}` (already copied to clipboard)
+2. Start a new Claude session: `claude`
 
-1. **Start Development**:
-   - Run `/cmd-issue-start` if you have an issue to implement
-   - Or begin writing tests following TDD approach
-
-2. **During Development**:
-   - Write tests first (RED phase)
-   - Implement features (GREEN phase)
-   - Refactor and optimize (REFACTOR phase)
-   - Commit regularly with descriptive messages
-
-3. **Database Migrations**:
-   - Run `alembic upgrade head` (for Python projects)
-   - Run `npm run migrate` (for Node projects)
-   - Test schema changes safely without affecting main database
-
-4. **When Complete**:
-   - Run `/cmd-feature-document` to create spec and update documentation
-   - Merge your changes (PR or local merge)
-   - Run `/cmd-issue-complete` to clean everything up
-
-5. **Virtual Environment Activation**:
-   - **Backend projects**: `cd backend && source venv/bin/activate`
-   - **Root-level Python**: `source venv/bin/activate`
-   - **API projects**: `cd api && source venv/bin/activate`
-   - **Multiple environments**: Each subdirectory with requirements.txt gets its own venv
-
-6. **Troubleshooting Virtual Environment Issues**:
-   ```bash
-   # Check what environments were created
-   ls -la */venv 2>/dev/null || ls -la venv 2>/dev/null
-
-   # If backend venv is missing, create manually:
-   cd backend && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
-
-   # Common activation patterns:
-   cd backend && source venv/bin/activate  # For backend/requirements.txt
-   source venv/bin/activate                # For root requirements.txt
-   ```
-
-7. **Remember**:
-   - This worktree is isolated from other branches
-   - You can switch between worktrees without stashing
-   - Each worktree maintains its own environment and database
-   - Virtual environments are created in the same directory as requirements.txt
-   - Database cleanup happens automatically when branches are merged
-   - ALWAYS create worktrees from the top level directory, not nested within existing worktrees
-
-## Common Project Structures Supported
-
-The script automatically handles these project layouts:
+## Usage Examples
 
 ```
-# Full-stack with backend subdirectory
-project/
-├── backend/requirements.txt → Creates backend/venv/
-├── frontend/package.json    → Runs npm install
-└── .env                     → Copied to worktree
+User: /cmd-worktree-create
+Assistant: What's the ticket ID?
+User: RAI-270
+Assistant: Branch type? (feature/fix/chore/hotfix)
+User: feature
+Assistant: Short description for branch name?
+User: add-user-auth
+Assistant: What environment do you need?
+  1. Full (frontend + backend + database)
+  2. Frontend + Backend (shared database)
+  3. Frontend only
+  4. Backend only
+  5. Backend + Database
+User: 2
+Assistant: I see this project has Celery workers. Do you need workers for this work?
+User: no
+Assistant: [runs script: worktree-create.sh feature RAI-270-add-user-auth --frontend --backend]
+```
 
-# Root-level Python project
-project/
-├── requirements.txt         → Creates venv/
-├── app/                     → Python source code
-└── .env                     → Copied to worktree
+## Cleanup
 
-# Microservices structure
-project/
-├── api/requirements.txt     → Creates api/venv/
-├── server/requirements.txt  → Creates server/venv/
-└── frontend/package.json    → Runs npm install
+When done with a worktree, use `/cmd-issue-complete` or manually:
+```bash
+git worktree remove trees/${BRANCH_NAME}
+git branch -d feature/${BRANCH_NAME}
+# If database was cloned:
+dropdb ${DB_NAME}_${BRANCH_NAME}
 ```
